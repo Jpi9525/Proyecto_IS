@@ -1,0 +1,11 @@
+¿Qué Hice Ayer?
+    Establecí la lógica para la autenticación de usuarios mediante un código de verificación enviado al correo electrónico.
+    También creé la estructura de la base de datos (tabla userlogin) para almacenar a los usuarios registrados y los datos necesarios para el login.
+    Después ingresé usuarios manualmente a la base de datos para realizar pruebas exhaustivas del flujo de inicio de sesión (login).
+¿Qué Haré Hoy?
+    Implementaré una función de Django (verificar_codigo) para conectar la base de datos y guardar los usuarios registrados justo después de que la verificación del ódigo sea correcta.
+    Haré función de validación para asegurar que los correos electrónicos (email) que intentan registrarse no se repitan en la base de datos.
+    Implementaré el hasheo de contraseñas en el backend antes de la inserción a la base de datos.
+Impedimentos Detectados
+    Tuve dificultades para instalar la librería mysqlclient debido a problemas de compatibilidad con una versión específica de Visual C++.
+    Y se presentaron dificultades en la configuración de la API utilizada para enviar los correos electrónicos con los códigos de verificación.
