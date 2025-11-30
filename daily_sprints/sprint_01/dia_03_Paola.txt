@@ -1,0 +1,9 @@
+> ¿Qué hice ayer?
+  A: Ayer terminé de crear las imágenes para los géneros de música.
+     Modifiqué algunos detalles que había en el git.
+> ¿Qué haré hoy?
+  A: Investigar sobre los softwares utilizados para testear el proyecto.
+     Además, empezar a crear ciertas funciones para realizar esto.
+> Impedimentos detectados:
+  - Limitacíones en el conocimiento teórico sobre cómo se tiene que hacer la etapa de testing.
+  - Configurar lo que corresponde, lo cual toma bastante tiempo en mi caso debido al nulo conocimeinto que se tiene en esta area.
