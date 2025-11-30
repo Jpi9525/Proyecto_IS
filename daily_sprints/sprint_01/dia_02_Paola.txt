@@ -1,0 +1,7 @@
+> ¿Qué hice ayer?
+	A: Ayer ayudé en la realización de las historias de usuarios.
+> ¿Qué haré hoy?
+	A: Estandaricé la base de datos además de comenzar a investigar sobre los distintos géneros populares que existen.
+> Impedimentos detectados:
+	- Fuentes confiables a la hora de buscar los géneros musicales más populares del momento.
+	- Conectar las tablas de la base de datos.

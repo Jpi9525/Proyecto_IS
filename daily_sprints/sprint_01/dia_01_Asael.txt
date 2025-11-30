@@ -1,0 +1,10 @@
+¿Qué hice ayer?
+    Ayer estuve enfocado en la planificación inicial del proyecto.
+    Trabajé con el equipo para definir las historias de usuario completas, incluyendo sus criterios de aceptación, su prioridad y la asignación de Story Points
+    También colaboramos en establecer la estructura y reglas de nuestros sprints
+¿Qué haré hoy?
+    	Hoy me centraré en el desarrollo del frontend de la autenticación:
+        Crearé las vistas de Login y Creación de Usuario.
+        Aplicaré los estilos CSS necesarios para darle una apariencia profesional a estos formularios.
+Impedimentos detectados:
+	Tuve una pequeña dificultad inicial con el CSS: no recordaba cómo establecer y modificar correctamente el ancho y la disposición de los inputs dentro de un formulario.
