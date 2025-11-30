@@ -1,9 +1,0 @@
-Daily:
-• ¿Qué hice ayer?
-Ayer termine de hacer la seleccionb de géneros y conectarla con la base de datos, y también termine de hacer el como se ve una vez entras 
-a la app web
-parte de la elección de generos
-• ¿Qué haré hoy?
-Hoy hare la review y la retorspectiva del sprint, al igual que empezar a planear el siguiente sprint
-• Impedimentos detectados
-No saber como conectar a una base desde django
