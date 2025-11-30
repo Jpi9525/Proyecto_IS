@@ -1,0 +1,5 @@
+Seguimiento de estandarización de nombres de archivos para la base de datos:
+Para géneros: gen_vaca_[nombre_genero]
+Para álbumes: cover_[nombre_artista]_[nombre_album]
+Para canciones: track_[nombre_artista]_[titulo]
+Para portada subida por el usuario: usr_avatar_[código_único]
