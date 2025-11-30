@@ -1,0 +1,8 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer hice el backlog y el primer sprint del proyecto, al igual que iniciar con la creación de la aplicación web en la 
+parte de la elección de generos
+• ¿Qué haré hoy?
+Hoy terminare de hacer toda la parte de elección de géneros y empezare con la parte de la exploración musical
+• Impedimentos detectados
+No saber django
