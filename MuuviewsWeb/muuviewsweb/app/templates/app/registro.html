@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro con Verificación</title>
+    {%load static%}
+    <link rel="stylesheet" href="{% static 'app/css/styles.css' %}">
+
+</head>
+<body>
+    <div class="loginDiv">
+        <div><img src="{% static '/app/images/LogoMuuviews.webp' %}" alt=""></div>
+        <h2>Crear Nueva Cuenta</h2>
+        <form id="registroForm">
+            {% csrf_token%}
+            <p>Nombre</p>
+            <input type="text" id="name" name="name" placeholder="Nombre completo" required>
+            
+            <p>Email</p>
+            <input type="email" id="email" name="email" placeholder="tu@email.com" required>
+            
+            <p>Nombre de usuario</p>
+            <input type="text" id="username" name="username" placeholder="Nombre de Usuario" required>
+            
+            <p>Contraseña</p>
+            <input type="password" id="password" name="password" placeholder="Cree una contraseña" required>
+            
+            <input type="submit" id="submitBtn" value="Registrarse">
+        </form>
+    </div>
+
+    <!-- MODAL DE VERIFICACIÓN -->
+    <div id="verificationModal" class="modal">
+        <div class="modal-content">
+            <h3>Verificación de Email</h3>
+            <div class="email-sent">
+                <p>Hemos enviado un código de 6 dígitos a:</p>
+                <p><strong id="userEmail"></strong></p>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                    Revisa tu bandeja de entrada (y spam)
+                </p>
+            </div>
+
+            <p style="color: white; margin-bottom: 8px; font-weight: 500; text-align: left;">Ingresa el código:</p>
+            <input style="color: rgb(255, 147, 165);" type="text" 
+                   id="verificationCode" 
+                   class="verification-input" 
+                   maxlength="6" 
+                   placeholder="000000"
+                   autocomplete="off">
+            
+            <div id="messageDiv"></div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-primary" id="verifyBtn" onclick="verifyCode()">Verificar</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="{% static '/app/js/validar_identidad.js' %}"></script>
+</body>
+</html>
