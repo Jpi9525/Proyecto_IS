@@ -1,13 +1,96 @@
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.hashers import make_password, check_password
 from django.http import JsonResponse
 from django.db import connection
+from .models import Usuario, Generos  # Asegúrate de importar ambos
 import json
 import random
 
+def login_view(request):
+    """Vista para el login de usuarios"""
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        
+        try:
+            # Buscar usuario por email
+            usuario = Usuario.objects.get(email=email)
+            #Consulta a la base de datos
+            if check_password(password, usuario.contrasena):
+                #Si existe guardar sesion
+                request.session['usuario_id'] = usuario.usuario_id
+                request.session['usuario_nombre'] = usuario.nombre
+                request.session['usuario_email'] = usuario.email
+                messages.success(request, f'¡Bienvenido {usuario.nombre}!')
+                return redirect('home')  # Redirigir a selección de géneros
+            else:
+                messages.error(request, 'Contraseña incorrecta')
+        except Usuario.DoesNotExist:
+            messages.error(request, 'No existe una cuenta con ese email')
+        
+        return render(request, 'interfaz/LoginScreen.html')
+    
+    return render(request, 'interfaz/LoginScreen.html')
+
+def registro_view(request):
+    """Vista para registro de nuevos usuarios"""
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        apellido = request.POST.get('apellido')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        # Validaciones
+        if not all([nombre, apellido, email, password]):
+            messages.error(request, 'Todos los campos son obligatorios')
+            return render(request, 'interfaz/registro.html')
+        
+        if password != confirm_password:
+            messages.error(request, 'Las contraseñas no coinciden')
+            return render(request, 'interfaz/registro.html')
+        
+        # Verificar si el email ya existe
+        if Usuario.objects.filter(email=email).exists():
+            messages.error(request, 'Ya existe una cuenta con ese email')
+            return render(request, 'interfaz/registro.html')
+        
+        try:
+            # Crear nuevo usuario
+            nuevo_usuario = Usuario(
+                nombre=nombre,
+                apellido=apellido,
+                email=email,
+                contrasena=password,  # En producción usar make_password(password)
+                foto_perfil_path='/static/interfaz/imagenes/inicio/default-avatar.png'
+            )
+            nuevo_usuario.save()
+            
+            messages.success(request, '¡Cuenta creada exitosamente! Ahora puedes iniciar sesión')
+            return redirect('login')
+            
+        except Exception as e:
+            messages.error(request, f'Error al crear la cuenta: {str(e)}')
+            return render(request, 'interfaz/registro.html')
+    
+    return render(request, 'interfaz/registro.html')
+
+def logout_view(request):
+    """Vista para cerrar sesión"""
+    request.session.flush()  # Limpiar toda la sesión
+    messages.success(request, 'Has cerrado sesión exitosamente')
+    return redirect('login')
+
 def seleccionar_generos(request):
-    """Vista principal para mostrar el formulario de selección de géneros"""
+    """Modificar la vista existente para requerir login"""
+    # Verificar si el usuario está logueado
+    if 'usuario_id' not in request.session:
+        messages.warning(request, 'Debes iniciar sesión primero')
+        return redirect('login')
+    
     
     # Rutas correctas según tu estructura
     imagenes_generos = {

@@ -78,3 +78,14 @@ class CancionesArtistas(models.Model):
     class Meta:
         managed = False
         db_table = 'canciones_artistas'
+
+class Usuario(models.Model):
+    contrasena = models.CharField(max_length=255)
+    nombre = models.CharField(max_length=50, default='')
+    email = models.EmailField(max_length=100, unique=True)
+    usuario_id = models.AutoField(primary_key=True)
+    class Meta:
+        db_table = 'usuarios'
+
+        def __str__(self):
+            return self.nombre
