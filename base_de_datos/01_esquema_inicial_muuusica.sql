@@ -29,7 +29,7 @@ CREATE TABLE usuarios (
     cancion_id INT, -- Canción de perfil
     nombre VARCHAR(50), 
     apellido VARCHAR(50),
-    contrasena VARCHAR(50),
+    contrasena VARCHAR(50), #CAMBIAR EL TAMAÑO A 255
     email VARCHAR(30),
     foto_perfil_path VARCHAR(100),
     descripcion VARCHAR(500),
