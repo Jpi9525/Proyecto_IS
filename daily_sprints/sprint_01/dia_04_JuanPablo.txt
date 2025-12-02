@@ -1,0 +1,8 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer intente conectar el inicio de usuario con la parte de los géneros, aunque no hubo exito
+en la parte de la elección de generos
+• ¿Qué haré hoy?
+Hoy conectare el inicio de usuario con la parte de los géneros y la musica que genera la selección de genero
+• Impedimentos detectados
+No saber el como conectar 2 proyectos entre si
