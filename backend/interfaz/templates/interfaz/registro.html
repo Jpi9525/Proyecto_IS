@@ -55,7 +55,8 @@
             margin-bottom: 10px;
         }
         input[type="submit"] {
-            width: 40%;
+            width: 250px;
+            max-width: 250px;
             margin: 0px auto;
             padding: 14px;
             background: linear-gradient(135deg, rgb(245, 129, 149) 0%, #b84f9f 100%);
@@ -66,7 +67,6 @@
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.2s;
-
         }
         input[type="text"]:focus,
         input[type="password"]:focus,
@@ -217,7 +217,7 @@
 </head>
 <body>
     <div class="loginDiv">
-        <div><img src="{% static 'interfaz/imagenes/inicio/LogoMuuviews.webp' %}" alt=""></div>
+        <div><img src="{% static 'interfaz/imagenes/Inicio/LogoMuuviews.webp' %}" alt=""></div>
         <h2>Crear Nueva Cuenta</h2>
         <form id="registroForm">
             {% csrf_token%}
@@ -494,12 +494,13 @@
         .then(data => {
             console.log("Datos recibidos:", data);
             if (data.success) {
-                mostrarMensajeModal('¡Registro exitoso! Redirigiendo al login...', 'success');
+                mostrarMensajeModal('¡Registro exitoso! Entrando a tu cuenta...', 'success');
                 setTimeout(() => {
-                    window.location.href = '/';
-                }, 2000);
+                    // Cambiar esta línea para ir a home (géneros)
+                    window.location.href = data.redirect_url || '/home/';
+                }, 1500);
             } else {
-                mostrarMensajeModal(data.message, 'error');
+                mostrarMensajeModal(data.message || 'Error al registrar', 'error');
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verificar';
             }

@@ -136,3 +136,6 @@ LOGOUT_REDIRECT_URL = 'login'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 horas
+
+# Configuración para usar nuestro corredor de pruebas personalizado
+TEST_RUNNER = 'interfaz.tests.runner.ForceManagedModelTestRunner'

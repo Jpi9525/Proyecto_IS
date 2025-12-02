@@ -80,12 +80,17 @@ class CancionesArtistas(models.Model):
         db_table = 'canciones_artistas'
 
 class Usuario(models.Model):
-    contrasena = models.CharField(max_length=255)
-    nombre = models.CharField(max_length=50, default='')
-    email = models.EmailField(max_length=100, unique=True)
     usuario_id = models.AutoField(primary_key=True)
-    class Meta:
-        db_table = 'usuarios'
+    nombre = models.CharField(max_length=100, blank=True, null=True)  # Aumentado
+    apellido = models.CharField(max_length=100, blank=True, null=True)  # Aumentado
+    contrasena = models.CharField(max_length=100, blank=True, null=True)  # Aumentado
+    email = models.CharField(max_length=100, blank=True, null=True)  # AUMENTADO de 30 a 100
+    foto_perfil_path = models.CharField(max_length=100, blank=True, null=True)
+    descripcion = models.CharField(max_length=500, blank=True, null=True)
+    es_email_verificado = models.IntegerField(blank=True, null=True, default=0)
+    es_admin = models.IntegerField(blank=True, null=True, default=0)
+    cancion_id = models.IntegerField(blank=True, null=True)
 
-        def __str__(self):
-            return self.nombre
+    class Meta:
+        managed = False
+        db_table = 'usuarios'

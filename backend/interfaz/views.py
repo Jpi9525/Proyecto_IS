@@ -1,4 +1,5 @@
 
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
@@ -9,27 +10,123 @@ from .models import Usuario, Generos  # Asegúrate de importar ambos
 import json
 import random
 
+@csrf_exempt
+def guardar_usuario(request):
+    """Vista para guardar usuario después de verificación de email"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            # Extraer datos
+            nombre = data.get('name')
+            email = data.get('email')
+            username = data.get('username')
+            password = data.get('password')
+            
+            # Verificar si el email ya existe
+            if Usuario.objects.filter(email=email).exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Ya existe una cuenta con ese email'
+                })
+            
+            # OPCIÓN 1: Crear usuario solo con campos que existen
+            try:
+                nuevo_usuario = Usuario(
+                    nombre=username,
+                    email=email,
+                    contrasena=password
+                )
+                nuevo_usuario.save()
+                
+                # Actualizar campos adicionales con SQL directo si es necesario
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE usuarios 
+                        SET es_email_verificado = 1, es_admin = 0, apellido = ''
+                        WHERE usuario_id = %s
+                    """, [nuevo_usuario.usuario_id])
+                
+            except Exception as e:
+                # OPCIÓN 2: Si falla, usar SQL directo completamente
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO usuarios (nombre, apellido, email, contrasena, es_email_verificado, es_admin)
+                        VALUES (%s, %s, %s, %s, 1, 0)
+                    """, [username, '', email, password])
+                    
+                    # Obtener el ID del usuario recién creado
+                    cursor.execute("SELECT LAST_INSERT_ID()")
+                    usuario_id = cursor.fetchone()[0]
+                    
+                    nuevo_usuario = Usuario.objects.get(usuario_id=usuario_id)
+            
+            # Auto-login después del registro
+            request.session['usuario_id'] = nuevo_usuario.usuario_id
+            request.session['usuario_nombre'] = nuevo_usuario.nombre
+            request.session['usuario_email'] = nuevo_usuario.email
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Usuario registrado exitosamente',
+                'redirect_url': '/home/'
+            })
+            
+        except Exception as e:
+            print(f"Error al guardar usuario: {e}")
+            return JsonResponse({
+                'success': False,
+                'message': f'Error al registrar: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'message': 'Método no permitido'})
+
+
 def login_view(request):
     """Vista para el login de usuarios"""
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+        # Obtener los datos del formulario con los nombres correctos
+        username_or_email = request.POST.get('userName') or request.POST.get('email')
+        password = request.POST.get('passWord') or request.POST.get('password')
+        
+        print(f"Datos recibidos - Usuario: {username_or_email}, Password: {password}")  # Debug
+        print(f"Todos los datos POST: {request.POST}")  # Ver todos los campos
+        
+        # Validar que los campos no estén vacíos
+        if not username_or_email or not password:
+            messages.error(request, 'Por favor ingresa usuario/email y contraseña')
+            return render(request, 'interfaz/LoginScreen.html')
         
         try:
-            # Buscar usuario por email
-            usuario = Usuario.objects.get(email=email)
-            #Consulta a la base de datos
-            if check_password(password, usuario.contrasena):
-                #Si existe guardar sesion
+            # Buscar usuario - primero verificar si es email
+            if '@' in str(username_or_email):  # Convertir a string por si acaso
+                usuario = Usuario.objects.get(email=username_or_email)
+            else:
+                # Buscar por nombre
+                usuario = Usuario.objects.get(nombre=username_or_email)
+            
+            print(f"Usuario encontrado: {usuario.nombre}")
+            print(f"Contraseña en BD: '{usuario.contrasena}'")
+            print(f"Contraseña ingresada: '{password}'")
+            
+            # Verificar contraseña
+            if usuario.contrasena == password:
+                # Login exitoso
                 request.session['usuario_id'] = usuario.usuario_id
                 request.session['usuario_nombre'] = usuario.nombre
                 request.session['usuario_email'] = usuario.email
-                messages.success(request, f'¡Bienvenido {usuario.nombre}!')
-                return redirect('home')  # Redirigir a selección de géneros
+                
+                return redirect('lista_reproduccion')
             else:
                 messages.error(request, 'Contraseña incorrecta')
+                
         except Usuario.DoesNotExist:
-            messages.error(request, 'No existe una cuenta con ese email')
+            messages.error(request, 'No existe una cuenta con esos datos')
+        except Usuario.MultipleObjectsReturned:
+            messages.error(request, 'Error: Múltiples usuarios encontrados')
+        except Exception as e:
+            print(f"Error inesperado: {e}")
+            messages.error(request, f'Error: {str(e)}')
         
         return render(request, 'interfaz/LoginScreen.html')
     
