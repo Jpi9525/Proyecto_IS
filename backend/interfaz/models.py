@@ -83,7 +83,7 @@ class Usuario(models.Model):
     usuario_id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100, blank=True, null=True)  # Aumentado
     apellido = models.CharField(max_length=100, blank=True, null=True)  # Aumentado
-    contrasena = models.CharField(max_length=100, blank=True, null=True)  # Aumentado
+    contrasena = models.CharField(max_length=255, blank=True, null=True)  # Aumentado
     email = models.CharField(max_length=100, blank=True, null=True)  # AUMENTADO de 30 a 100
     foto_perfil_path = models.CharField(max_length=100, blank=True, null=True)
     descripcion = models.CharField(max_length=500, blank=True, null=True)

@@ -16,16 +16,15 @@ class PlaylistTests(TestCase):
 
     def test_GEN_001_guardar_generos_validacion(self):
         """No debe dejar guardar si seleccionas menos de 3"""
-        # Asegúrate que en urls.py esta ruta se llame 'guardar_generos'
         try:
             url = reverse('guardar_generos')
         except:
-            # Si falla, probablemente la url tiene otro nombre, ajusta aquí
             return 
             
         data = {'generos': ['Rock', 'Pop']} # Solo 2
         
-        response = self.client.post(url, data)
+        # AGREGAMOS follow=True AQUÍ ABAJO 👇
+        response = self.client.post(url, data, follow=True)
         
         # Verificar mensaje de error
         messages = list(response.context['messages'])

@@ -35,7 +35,7 @@ def guardar_usuario(request):
                 nuevo_usuario = Usuario(
                     nombre=username,
                     email=email,
-                    contrasena=password
+                    contrasena=make_password(password)  # Hashear la contraseña
                 )
                 nuevo_usuario.save()
                 
@@ -110,7 +110,7 @@ def login_view(request):
             print(f"Contraseña ingresada: '{password}'")
             
             # Verificar contraseña
-            if usuario.contrasena == password:
+            if check_password(password, usuario.contrasena.strip()):
                 # Login exitoso
                 request.session['usuario_id'] = usuario.usuario_id
                 request.session['usuario_nombre'] = usuario.nombre
