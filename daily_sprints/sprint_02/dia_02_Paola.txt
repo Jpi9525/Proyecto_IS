@@ -1,0 +1,6 @@
+> ¿Qué hice ayer?
+  A: Comencé a crear la historia de perfil de usuario, es decir, el template en donde el usuario podrá ver su perfil y hacer los cambios correspondientes.
+> ¿Qué haré hoy?
+  A: Continuar en donde me quedé el día de ayer, debido a unos bugs con la base de datos.
+> Impedimentos detectados:
+  - Manejo erróneo del virtual environment en la carpeta del proyecto.
