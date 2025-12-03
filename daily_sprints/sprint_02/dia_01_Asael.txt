@@ -1,0 +1,6 @@
+¿Qué Hice Ayer?
+	Ayer estuve en el proceso de la integración del login con el feed
+¿Qué Haré Hoy?
+    	Iniciar la planeación del sprint en conjunto con mi equipo
+Impedimentos Detectados
+	No se había implementado un entorno virtual en proyecto, lo que impidió trabajar desplegar el proyecto en otro equipo
