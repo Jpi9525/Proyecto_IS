@@ -1,0 +1,7 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer se organice el sprint planning y termine de implementar 1na de las partes que me tocaba
+• ¿Qué haré hoy?
+Acabar con la 2da parte que me toca
+• Impedimentos detectados
+Ninguno
