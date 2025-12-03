@@ -1,0 +1,7 @@
+¿Qué Hice Ayer?
+	Se hizo la planeación del segundo sprint
+	También avancé con dos criterios de aceptación sin embargo no se terminó del todo
+¿Qué Haré Hoy?
+    	Hoy pienso terminar los dos criterios de aceptación de la historia de usuario
+Impedimentos Detectados
+	
