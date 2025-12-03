@@ -1,0 +1,37 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    {% load static %}
+    <link rel="stylesheet" href="static/app/css/styles.css">
+ </head>
+ <body>
+    <div class="loginDiv">
+        <div><img src="static/app/images/LogoMuuviews.webp" alt=""></div>
+        <h2>Iniciar Sesion o Registrarse</h2>
+            <form name="LoginUser" method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                <p>Nombre de usuario o correo:</p>
+                <input type="text" name="userName" placeholder="Ingrese nombre de usuario">
+                <p>Contraseña:</p>
+                <input type="password" name="passWord" placeholder="Ingrese contraseña">
+                {% if messages %}
+                        <ul class="messages" style = "margin:0 auto; padding:0px 5px; width:80%;  height: 50px;" >
+                            {% for message in messages %}
+                                <h4{% if message.tags %} class="{{ message.tags }}"{% endif %} style="color: red; font-size: 14px; font-weight: 300;">
+                                    {{ message }}
+                                </h4>
+                            {% endfor %}
+                        </ul>
+                {% endif %}
+                <input type="submit" value="Iniciar Sesion">
+                <a style="color: grey; margin-top: 20px;" href="{%url 'registro'%}">Crear nueva cuenta</a>
+            </form>
+            
+    </div>
+ </body>
+ </html>
+ 
+ 

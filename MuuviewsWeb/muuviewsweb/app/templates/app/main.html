@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenida</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'mi_app/css/styles.css' %}">
+</head>
+<body>
+    <div class="bienvenida-container">
+        <h1>¡Bienvenido, {{ nombre }}!</h1>
+        <p>Has iniciado sesión exitosamente.</p>
+        <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
+    </div>
+</body>
+</html>
