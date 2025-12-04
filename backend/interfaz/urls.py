@@ -13,4 +13,11 @@ urlpatterns = [
     path('home/', views.seleccionar_generos, name='home'),  # Esta es la de géneros
     path('guardar-generos/', views.guardar_generos, name='guardar_generos'),
     path('lista-reproduccion/', views.lista_reproduccion, name='lista_reproduccion'),
+
+    # Perfil
+    path('perfil/', views.perfil_usuario, name='perfil_usuario'),
+    path('perfil/editar/', views.editar_perfil, name='editar_perfil'),
+
+    # Géneros
+    path('generos/', views.seleccionar_generos, name='seleccionar_generos'),
 ]

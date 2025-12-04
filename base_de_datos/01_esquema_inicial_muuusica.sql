@@ -197,6 +197,13 @@ CREATE TABLE descargas_playlists (
     FOREIGN KEY (playlist_id) REFERENCES playlists(playlist_id)
 ); 
 
+CREATE TABLE redes_sociales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    nombre_red VARCHAR(50),
+    url VARCHAR(200)
+);
+
 CREATE TABLE api_externa ( 
 	api_id INT AUTO_INCREMENT,
     PRIMARY KEY (api_id),
@@ -204,5 +211,4 @@ CREATE TABLE api_externa (
 	api_key VARCHAR(500),         
 	endpoint_url VARCHAR(500),             
 	activa BOOLEAN DEFAULT FALSE
-); 
-
+);
