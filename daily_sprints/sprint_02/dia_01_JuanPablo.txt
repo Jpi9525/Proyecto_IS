@@ -1,0 +1,8 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer  conecte el inicio de usuario con la parte de los géneros y la base de datos y funciono corectamente
+en la parte de la elección de generos
+• ¿Qué haré hoy?
+Hoy realizare el sprint planning del 2do sprint
+• Impedimentos detectados
+No saber las dificultades reales del proyecto

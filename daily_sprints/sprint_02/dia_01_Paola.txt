@@ -1,7 +1,16 @@
+<<<<<<< HEAD
 > ¿Qué hice ayer?
   A: Crear las funciones para testear lo que llevamos avanzado del proyecto.
      Hacer testing a la autorización del usuario y cómo la playlist tomaba los datos de la base de datos.
 > ¿Qué haré hoy?
   A: Ayudar en la organización y planeación del sprint 2.
 > Impedimentos detectados:
+=======
+> ¿Qué hice ayer?
+  A: Crear las funciones para testear lo que llevamos avanzado del proyecto.
+     Hacer testing a la autorización del usuario y cómo la playlist tomaba los datos de la base de datos.
+> ¿Qué haré hoy?
+  A: Ayudar en la organización y planeación del sprint 2.
+> Impedimentos detectados:
+>>>>>>> 9e37393b496066e086f495cf55c0879297e1a64a
   - Limitar las funciones de testing a lo que se lleva en el proyecto.

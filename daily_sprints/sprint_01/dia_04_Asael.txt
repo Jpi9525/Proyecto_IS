@@ -1,0 +1,11 @@
+¿Qué Hice Ayer?
+    Implementé la vista verificar_codigo en Django para conectar la base de datos e insertar nuevos usuarios en la tabla de pruebas userlogin una vez que la verificación del código es exitosa.
+    Creé una función de validación para asegurar que los correos electrónicos no se repitan (email) durante el proceso de registro.
+    Implementé correctamente la función make_password en el backend para hashear las contraseñas antes de su inserción en la base de datos.
+
+¿Qué Haré Hoy?
+    Conectar el flujo de login con la página principal/feed del programa.
+    Implementar la lógica para que el usuario pueda seleccionar sus gustos musicales (géneros) como parte del proceso de registro de una nueva cuenta.
+
+Impedimentos Detectados
+Se presentó un problema al intentar guardar la contraseña hasheada en la base de datos (posiblemente un error de columna muy corta o de migración).

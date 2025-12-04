@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 > ¿Qué hice ayer?
   A: Investigar sobre los softwares utilizados para testear el proyecto.
      Crear un documento de hoja de cálculo en donde comentar los resultados de los testings.
@@ -5,4 +6,13 @@
   A: Crear las funciones para testear lo que llevamos avanzado del proyecto.
 > Impedimentos detectados:
   - Crear funciones que sirvan y que abarcan lo necesario para verificar el buen funcionamiento de la página web.
+=======
+> ¿Qué hice ayer?
+  A: Investigar sobre los softwares utilizados para testear el proyecto.
+     Crear un documento de hoja de cálculo en donde comentar los resultados de los testings.
+> ¿Qué haré hoy?
+  A: Crear las funciones para testear lo que llevamos avanzado del proyecto.
+> Impedimentos detectados:
+  - Crear funciones que sirvan y que abarcan lo necesario para verificar el buen funcionamiento de la página web.
+>>>>>>> 9e37393b496066e086f495cf55c0879297e1a64a
   - Comunicarle a los desarrolladores esos detalles para que se arreglen.
