@@ -94,3 +94,12 @@ class Usuario(models.Model):
     class Meta:
         managed = False
         db_table = 'usuarios'
+
+class RedesSociales(models.Model):
+    usuario_id = models.IntegerField() # Lo vinculamos manualmente al ID de usuario
+    nombre_red = models.CharField(max_length=50) #Ej. Facebook, Instagram
+    url = models.URLField(max_length=200)
+
+    class Meta:
+        managed = False
+        db_table = 'redes_sociales'

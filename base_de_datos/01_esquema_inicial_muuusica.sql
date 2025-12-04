@@ -29,7 +29,8 @@ CREATE TABLE usuarios (
     cancion_id INT, -- Canción de perfil
     nombre VARCHAR(50), 
     apellido VARCHAR(50),
-    contrasena VARCHAR(50), #CAMBIAR EL TAMAÑO A 255
+    contrasena VARCHAR(255), #CAMBIAR EL TAMAÑO A 255
+	username VARCHAR(50),
     email VARCHAR(30),
     foto_perfil_path VARCHAR(100),
     descripcion VARCHAR(500),
@@ -197,6 +198,13 @@ CREATE TABLE descargas_playlists (
     FOREIGN KEY (playlist_id) REFERENCES playlists(playlist_id)
 ); 
 
+CREATE TABLE redes_sociales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    nombre_red VARCHAR(50),
+    url VARCHAR(200)
+);
+
 CREATE TABLE api_externa ( 
 	api_id INT AUTO_INCREMENT,
     PRIMARY KEY (api_id),
@@ -204,5 +212,4 @@ CREATE TABLE api_externa (
 	api_key VARCHAR(500),         
 	endpoint_url VARCHAR(500),             
 	activa BOOLEAN DEFAULT FALSE
-); 
-
+);
