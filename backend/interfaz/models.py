@@ -95,11 +95,44 @@ class Usuario(models.Model):
         managed = False
         db_table = 'usuarios'
 
-class RedesSociales(models.Model):
-    usuario_id = models.IntegerField() # Lo vinculamos manualmente al ID de usuario
-    nombre_red = models.CharField(max_length=50) #Ej. Facebook, Instagram
-    url = models.URLField(max_length=200)
+class Playlist(models.Model):
+    playlist_id = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id', blank=True, null=True)
+    nombre = models.CharField(max_length=30, blank=True, null=True)
+    fecha_creacion = models.DateField(blank=True, null=True)
+    imagen_portada = models.CharField(max_length=500, blank=True, null=True)
+    es_publica = models.IntegerField(default=0)
 
     class Meta:
         managed = False
-        db_table = 'redes_sociales'
+        db_table = 'playlists'
+
+
+class PlaylistsCanciones(models.Model):
+    playlist = models.ForeignKey(Playlist, models.DO_NOTHING, db_column='playlist_id')
+    cancion = models.ForeignKey(Canciones, models.DO_NOTHING, db_column='cancion_id')
+    orden = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'playlists_canciones'
+
+
+class FavoritosCanciones(models.Model):
+    usuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id')
+    cancion = models.ForeignKey(Canciones, models.DO_NOTHING, db_column='cancion_id')
+    es_favorito = models.IntegerField(default=0)
+
+    class Meta:
+        managed = False
+        db_table = 'favoritos_canciones'
+
+
+class FavoritosAlbumes(models.Model):
+    usuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id')
+    album = models.ForeignKey(Albumes, models.DO_NOTHING, db_column='album_id')
+    es_favorito = models.IntegerField(default=0)
+
+    class Meta:
+        managed = False
+        db_table = 'favoritos_albumes'

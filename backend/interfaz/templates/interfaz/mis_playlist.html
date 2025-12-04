@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Playlists</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --bg-card: #282828;
+            --bg-card-hover: #3a3a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --accent-pink: #ff1493;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 40px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .back-btn {
+            background: var(--bg-card);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .back-btn:hover { background: var(--accent-pink); }
+        h1 { font-size: 32px; }
+        .playlists-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+        }
+        .playlist-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .playlist-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255,20,147,0.2);
+        }
+        .playlist-cover {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, var(--accent-pink), #8b5cf6);
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        .playlist-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .play-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 45px;
+            height: 45px;
+            background: var(--accent-pink);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+        }
+        .playlist-card:hover .play-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .playlist-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .playlist-meta {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 80px;
+            color: var(--text-secondary);
+            grid-column: 1/-1;
+        }
+        .empty-state span { font-size: 80px; display: block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 Mis Playlists</h1>
+        <button class="back-btn" onclick="history.back()">← Volver</button>
+    </div>
+
+    <div class="playlists-grid">
+        {% for playlist in playlists %}
+        <a href="{% url 'ver_playlist' playlist.id %}" class="playlist-card">
+            <div class="playlist-cover">
+                {% if playlist.portada and 'placeholder' not in playlist.portada %}
+                    <img src="{{ playlist.portada }}" alt="{{ playlist.nombre }}">
+                {% else %}
+                    🎵
+                {% endif %}
+                <div class="play-btn">▶</div>
+            </div>
+            <div class="playlist-title">{{ playlist.nombre }}</div>
+            <div class="playlist-meta">{{ playlist.total_canciones }} canciones</div>
+        </a>
+        {% empty %}
+        <div class="empty-state">
+            <span>📋</span>
+            <p>No tienes playlists todavía</p>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

@@ -139,7 +139,3 @@ SESSION_COOKIE_AGE = 86400  # 24 horas
 
 # Configuración para usar nuestro corredor de pruebas personalizado
 TEST_RUNNER = 'interfaz.tests.runner.ForceManagedModelTestRunner'
-
-# Carpeta física donde se guardarán las fotos
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -6,13 +6,9 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import JsonResponse
 from django.db import connection
-from .models import Usuario, Generos, RedesSociales, Canciones, CancionesGeneros  # Asegúrate de importar ambos
-
-from django.core.files.storage import FileSystemStorage
-
+from .models import Usuario, Generos  # Asegúrate de importar ambos
 import json
 import random
-import os
 
 @csrf_exempt
 def guardar_usuario(request):
@@ -293,13 +289,6 @@ def guardar_generos(request):
 
 
 def lista_reproduccion(request):
-    # Usuario
-    uid = request.session.get('usuario_id')
-    if not uid:
-        return redirect('login')
-    
-    usuario_actual = Usuario.objects.get(usuario_id=uid)
-    
     """Vista para mostrar las canciones reales de la BD"""
     generos_seleccionados = request.session.get('generos_favoritos', [])
     
@@ -380,103 +369,502 @@ def lista_reproduccion(request):
     context = {
         'canciones': todas_las_canciones,
         'generos_seleccionados': generos_seleccionados,
-        'total_canciones': len(todas_las_canciones),
-
-        'usuario': usuario_actual
+        'total_canciones': len(todas_las_canciones)
     }
     
     return render(request, 'interfaz/lista_reproduccion.html', context)
+# ============== ÁLBUMES ==============
 
-def perfil_usuario(request):
-    # 1. Seguridad: Verificar sesión
-    uid = request.session.get('usuario_id')
-    if not uid:
+def lista_albumes(request):
+    """Ver todos los álbumes"""
+    if 'usuario_id' not in request.session:
         return redirect('login')
     
-    usuario = Usuario.objects.get(usuario_id=uid)
-
-    # 2. Obtener redes sociales
-    redes = RedesSociales.objects.filter(usuario_id=uid)
-
-    # 3. Lógica del autoplay (buscar la canción elegida)
-    cancion_anthem = None
-    if usuario.cancion_id:
-        try:
-            cancion_anthem = Canciones.objects.get(cancion_id=usuario.cancion_id)
-        except Canciones.DoesNotExist:
-            pass
+    albumes = []
     
-    # 4. Obtener canciones publicadas
-    mis_canciones = Canciones.objects.all()[:4]
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    a.album_id,
+                    a.titulo,
+                    a.imagen_portada_path,
+                    a.fecha_lanzamiento,
+                    ar.nombre as artista,
+                    COUNT(c.cancion_id) as total_canciones
+                FROM albumes a
+                LEFT JOIN albumes_artistas aa ON a.album_id = aa.album_id AND aa.rol = 'Principal'
+                LEFT JOIN artistas ar ON aa.artista_id = ar.artista_id
+                LEFT JOIN canciones c ON a.album_id = c.album_id
+                GROUP BY a.album_id, a.titulo, a.imagen_portada_path, a.fecha_lanzamiento, ar.nombre
+                ORDER BY a.fecha_lanzamiento DESC
+            """)
+            
+            for row in cursor.fetchall():
+                albumes.append({
+                    'id': row[0],
+                    'titulo': row[1] or 'Sin título',
+                    'portada': row[2] or 'https://via.placeholder.com/150?text=Album',
+                    'fecha': row[3],
+                    'artista': row[4] or 'Artista desconocido',
+                    'total_canciones': row[5]
+                })
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    return render(request, 'interfaz/lista_album.html', {'albumes': albumes})
 
-    context = {
-        'usuario' : usuario,
-        'redes' : redes, 
-        'cancion_anthem' : cancion_anthem,
-        'mis_canciones' : mis_canciones,
-        'todas_canciones' : Canciones.objects.all()
-    }
 
-    return render(request, 'interfaz/perfil.html', context)
+def ver_album(request, album_id):
+    """Ver contenido de un álbum específico"""
+    if 'usuario_id' not in request.session:
+        return redirect('login')
+    
+    album_info = None
+    canciones = []
+    
+    try:
+        with connection.cursor() as cursor:
+            # Info del álbum
+            cursor.execute("""
+                SELECT 
+                    a.album_id, a.titulo, a.imagen_portada_path, 
+                    a.fecha_lanzamiento, ar.nombre as artista
+                FROM albumes a
+                LEFT JOIN albumes_artistas aa ON a.album_id = aa.album_id AND aa.rol = 'Principal'
+                LEFT JOIN artistas ar ON aa.artista_id = ar.artista_id
+                WHERE a.album_id = %s
+            """, [album_id])
+            
+            row = cursor.fetchone()
+            if row:
+                album_info = {
+                    'id': row[0],
+                    'titulo': row[1] or 'Sin título',
+                    'portada': row[2] or 'https://via.placeholder.com/300?text=Album',
+                    'fecha': row[3],
+                    'artista': row[4] or 'Artista desconocido'
+                }
+            
+            # Canciones del álbum
+            cursor.execute("""
+                SELECT 
+                    c.cancion_id, c.titulo, c.duracion, c.ruta_archivo,
+                    ar.nombre as artista, g.nombre as genero
+                FROM canciones c
+                LEFT JOIN canciones_artistas ca ON c.cancion_id = ca.cancion_id AND ca.tipo_participacion = 'Principal'
+                LEFT JOIN artistas ar ON ca.artista_id = ar.artista_id
+                LEFT JOIN canciones_generos cg ON c.cancion_id = cg.cancion_id
+                LEFT JOIN generos g ON cg.genero_id = g.genero_id
+                WHERE c.album_id = %s
+                ORDER BY c.cancion_id
+            """, [album_id])
+            
+            for row in cursor.fetchall():
+                duracion = str(row[2]) if row[2] else "0:00"
+                if len(duracion) > 5:
+                    duracion = duracion[3:8]
+                
+                canciones.append({
+                    'id': row[0],
+                    'titulo': row[1] or 'Sin título',
+                    'duracion': duracion,
+                    'ruta_archivo': row[3],
+                    'artista': row[4] or album_info['artista'],
+                    'genero': row[5] or 'Sin género',
+                    'portada': album_info['portada']
+                })
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    if not album_info:
+        messages.error(request, 'Álbum no encontrado')
+        return redirect('lista_albumes')
+    
+    return render(request, 'interfaz/ver_album.html', {
+        'album': album_info,
+        'canciones': canciones,
+        'total_canciones': len(canciones)
+    })
 
-def editar_perfil(request):
-    # Verificar sesión
-    uid = request.session.get('usuario_id')
-    if not uid: return redirect('login')
 
-    usuario = Usuario.objects.get(usuario_id=uid)
+# ============== PLAYLISTS ==============
 
-    if request.method == 'POST':
-        print("--- INICIANDO ACTUALIZACIÓN POR SQL ---")
-        # Editar Nombre
-        nuevo_nombre = request.POST.get('nombre')
-        nuevo_apellido = request.POST.get('apellido')
-        nueva_bio = request.POST.get('descripcion', '')
-        cancion_id = request.POST.get('cancion_anthem_id')
+def mis_playlists(request):
+    """Ver playlists del usuario"""
+    if 'usuario_id' not in request.session:
+        return redirect('login')
+    
+    usuario_id = request.session['usuario_id']
+    playlists = []
+    
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    p.playlist_id, p.nombre, p.imagen_portada,
+                    p.fecha_creacion, p.es_publica,
+                    COUNT(pc.cancion_id) as total_canciones
+                FROM playlists p
+                LEFT JOIN playlists_canciones pc ON p.playlist_id = pc.playlist_id
+                WHERE p.usuario_id = %s
+                GROUP BY p.playlist_id, p.nombre, p.imagen_portada, p.fecha_creacion, p.es_publica
+                ORDER BY p.fecha_creacion DESC
+            """, [usuario_id])
+            
+            for row in cursor.fetchall():
+                playlists.append({
+                    'id': row[0],
+                    'nombre': row[1] or 'Sin nombre',
+                    'portada': row[2] or 'https://via.placeholder.com/150?text=Playlist',
+                    'fecha': row[3],
+                    'es_publica': row[4],
+                    'total_canciones': row[5]
+                })
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    return render(request, 'interfaz/mis_playlist.html', {'playlists': playlists})
 
-        # Manejo de Foto
-        ruta_foto = usuario.foto_perfil_path
-        if 'foto_perfil' in request.FILES and request.FILES['foto_perfil']:
-            imagen = request.FILES['foto_perfil']
-            fs = FileSystemStorage()
-            # Guardamos el archivo físicamente
-            filename = fs.save(f"perfiles/user_{uid}_{imagen.name}", imagen)
-            ruta_foto = fs.url(filename)
 
-        # Validamos canción (si está vacía, ponemos NULL o 0)
-        if not cancion_id:
-            cancion_id = None
+def ver_playlist(request, playlist_id):
+    """Ver contenido de una playlist"""
+    if 'usuario_id' not in request.session:
+        return redirect('login')
+    
+    usuario_id = request.session['usuario_id']
+    playlist_info = None
+    canciones = []
+    
+    try:
+        with connection.cursor() as cursor:
+            # Info de la playlist
+            cursor.execute("""
+                SELECT playlist_id, nombre, imagen_portada, fecha_creacion, es_publica, usuario_id
+                FROM playlists
+                WHERE playlist_id = %s AND (usuario_id = %s OR es_publica = 1)
+            """, [playlist_id, usuario_id])
+            
+            row = cursor.fetchone()
+            if row:
+                playlist_info = {
+                    'id': row[0],
+                    'nombre': row[1] or 'Sin nombre',
+                    'portada': row[2] or 'https://via.placeholder.com/300?text=Playlist',
+                    'fecha': row[3],
+                    'es_publica': row[4],
+                    'es_propietario': row[5] == usuario_id
+                }
+            
+            # Canciones de la playlist
+            cursor.execute("""
+                SELECT 
+                    c.cancion_id, c.titulo, c.duracion, c.ruta_archivo,
+                    a.titulo as album, a.imagen_portada_path,
+                    ar.nombre as artista, g.nombre as genero, pc.orden
+                FROM playlists_canciones pc
+                JOIN canciones c ON pc.cancion_id = c.cancion_id
+                LEFT JOIN albumes a ON c.album_id = a.album_id
+                LEFT JOIN canciones_artistas ca ON c.cancion_id = ca.cancion_id AND ca.tipo_participacion = 'Principal'
+                LEFT JOIN artistas ar ON ca.artista_id = ar.artista_id
+                LEFT JOIN canciones_generos cg ON c.cancion_id = cg.cancion_id
+                LEFT JOIN generos g ON cg.genero_id = g.genero_id
+                WHERE pc.playlist_id = %s
+                ORDER BY pc.orden
+            """, [playlist_id])
+            
+            for row in cursor.fetchall():
+                duracion = str(row[2]) if row[2] else "0:00"
+                if len(duracion) > 5:
+                    duracion = duracion[3:8]
+                
+                canciones.append({
+                    'id': row[0],
+                    'titulo': row[1] or 'Sin título',
+                    'duracion': duracion,
+                    'ruta_archivo': row[3],
+                    'album': row[4] or 'Sin álbum',
+                    'portada': row[5] or 'https://via.placeholder.com/80?text=Song',
+                    'artista': row[6] or 'Artista desconocido',
+                    'genero': row[7] or 'Sin género'
+                })
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    if not playlist_info:
+        messages.error(request, 'Playlist no encontrada')
+        return redirect('mis_playlists')
+    
+    return render(request, 'interfaz/ver_playlist.html', {
+        'playlist': playlist_info,
+        'canciones': canciones,
+        'total_canciones': len(canciones)
+    })
 
-        # SQL directo
-        try:
-            with connection.cursor() as cursor:
-                sql = """
-                    UPDATE usuarios 
-                    SET nombre = %s, 
-                        apellido = %s, 
-                        descripcion = %s, 
-                        cancion_id = %s, 
-                        foto_perfil_path = %s
-                    WHERE usuario_id = %s
-                """
-                valores = [nuevo_nombre, nuevo_apellido, nueva_bio, cancion_id, ruta_foto, uid]
-                cursor.execute(sql, valores)
-                print(f"SQL Ejecutado correctamente. Filas afectadas: {cursor.rowcount}")
-        except Exception as e:
-            print(f"ERROR SQL: {e}")
 
-        nueva_red = request.POST.get('nueva_red_nombre')
-        nueva_url = request.POST.get('nueva_red_url')
+# ============== FAVORITOS ==============
 
-        if nueva_red and nueva_url:
-            RedesSociales.objects.create(
-                usuario_id=uid,
-                nombre_red=nueva_red,
-                url=nueva_url
-            )
+def mis_favoritos(request):
+    """Ver canciones favoritas del usuario"""
+    if 'usuario_id' not in request.session:
+        return redirect('login')
+    
+    usuario_id = request.session['usuario_id']
+    canciones = []
+    
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    c.cancion_id, c.titulo, c.duracion, c.ruta_archivo,
+                    a.titulo as album, a.imagen_portada_path,
+                    ar.nombre as artista, g.nombre as genero
+                FROM favoritos_canciones fc
+                JOIN canciones c ON fc.cancion_id = c.cancion_id
+                LEFT JOIN albumes a ON c.album_id = a.album_id
+                LEFT JOIN canciones_artistas ca ON c.cancion_id = ca.cancion_id AND ca.tipo_participacion = 'Principal'
+                LEFT JOIN artistas ar ON ca.artista_id = ar.artista_id
+                LEFT JOIN canciones_generos cg ON c.cancion_id = cg.cancion_id
+                LEFT JOIN generos g ON cg.genero_id = g.genero_id
+                WHERE fc.usuario_id = %s AND fc.es_favorito = 1
+            """, [usuario_id])
+            
+            for row in cursor.fetchall():
+                duracion = str(row[2]) if row[2] else "0:00"
+                if len(duracion) > 5:
+                    duracion = duracion[3:8]
+                
+                canciones.append({
+                    'id': row[0],
+                    'titulo': row[1] or 'Sin título',
+                    'duracion': duracion,
+                    'ruta_archivo': row[3],
+                    'album': row[4] or 'Sin álbum',
+                    'portada': row[5] or 'https://via.placeholder.com/80?text=Song',
+                    'artista': row[6] or 'Artista desconocido',
+                    'genero': row[7] or 'Sin género'
+                })
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    return render(request, 'interfaz/mis_favoritos.html', {
+        'canciones': canciones,
+        'total_canciones': len(canciones)
+    })
 
-        return redirect('perfil_usuario')
+# ============== FAVORITOS AJAX ==============
 
-    return redirect('perfil_usuario')
-
+@csrf_exempt
+def toggle_favorito(request):
+    """Agregar o quitar canción de favoritos"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        cancion_id = data.get('cancion_id')
+        usuario_id = request.session['usuario_id']
         
+        with connection.cursor() as cursor:
+            # Verificar si ya existe en favoritos
+            cursor.execute("""
+                SELECT es_favorito FROM favoritos_canciones 
+                WHERE usuario_id = %s AND cancion_id = %s
+            """, [usuario_id, cancion_id])
+            
+            resultado = cursor.fetchone()
+            
+            if resultado:
+                # Ya existe, toggle el estado
+                nuevo_estado = 0 if resultado[0] == 1 else 1
+                cursor.execute("""
+                    UPDATE favoritos_canciones 
+                    SET es_favorito = %s 
+                    WHERE usuario_id = %s AND cancion_id = %s
+                """, [nuevo_estado, usuario_id, cancion_id])
+                es_favorito = nuevo_estado == 1
+            else:
+                # No existe, crear como favorito
+                cursor.execute("""
+                    INSERT INTO favoritos_canciones (usuario_id, cancion_id, es_favorito)
+                    VALUES (%s, %s, 1)
+                """, [usuario_id, cancion_id])
+                es_favorito = True
+        
+        return JsonResponse({
+            'success': True,
+            'es_favorito': es_favorito,
+            'message': 'Agregado a favoritos' if es_favorito else 'Quitado de favoritos'
+        })
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+# ============== PLAYLISTS AJAX ==============
+
+@csrf_exempt
+def obtener_playlists_usuario(request):
+    """Obtener playlists del usuario para el modal"""
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    usuario_id = request.session['usuario_id']
+    playlists = []
+    
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT playlist_id, nombre, imagen_portada
+                FROM playlists
+                WHERE usuario_id = %s
+                ORDER BY fecha_creacion DESC
+            """, [usuario_id])
+            
+            for row in cursor.fetchall():
+                playlists.append({
+                    'id': row[0],
+                    'nombre': row[1] or 'Sin nombre',
+                    'portada': row[2] or ''
+                })
+        
+        return JsonResponse({'success': True, 'playlists': playlists})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def crear_playlist(request):
+    """Crear nueva playlist"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        nombre = data.get('nombre', 'Mi Playlist')
+        usuario_id = request.session['usuario_id']
+        
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO playlists (usuario_id, nombre, fecha_creacion, es_publica)
+                VALUES (%s, %s, CURDATE(), 0)
+            """, [usuario_id, nombre])
+            
+            # Obtener el ID de la playlist creada
+            cursor.execute("SELECT LAST_INSERT_ID()")
+            playlist_id = cursor.fetchone()[0]
+        
+        return JsonResponse({
+            'success': True,
+            'playlist_id': playlist_id,
+            'nombre': nombre,
+            'message': f'Playlist "{nombre}" creada'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def agregar_cancion_playlist(request):
+    """Agregar canción a una playlist"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        playlist_id = data.get('playlist_id')
+        cancion_id = data.get('cancion_id')
+        usuario_id = request.session['usuario_id']
+        
+        with connection.cursor() as cursor:
+            # Verificar que la playlist pertenece al usuario
+            cursor.execute("""
+                SELECT nombre FROM playlists 
+                WHERE playlist_id = %s AND usuario_id = %s
+            """, [playlist_id, usuario_id])
+            
+            playlist = cursor.fetchone()
+            if not playlist:
+                return JsonResponse({'success': False, 'message': 'Playlist no encontrada'})
+            
+            # Verificar si la canción ya está en la playlist
+            cursor.execute("""
+                SELECT 1 FROM playlists_canciones 
+                WHERE playlist_id = %s AND cancion_id = %s
+            """, [playlist_id, cancion_id])
+            
+            if cursor.fetchone():
+                return JsonResponse({'success': False, 'message': 'La canción ya está en la playlist'})
+            
+            # Obtener el orden máximo actual
+            cursor.execute("""
+                SELECT COALESCE(MAX(orden), 0) + 1 FROM playlists_canciones 
+                WHERE playlist_id = %s
+            """, [playlist_id])
+            nuevo_orden = cursor.fetchone()[0]
+            
+            # Agregar la canción
+            cursor.execute("""
+                INSERT INTO playlists_canciones (playlist_id, cancion_id, orden)
+                VALUES (%s, %s, %s)
+            """, [playlist_id, cancion_id, nuevo_orden])
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Canción agregada a "{playlist[0]}"'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def quitar_cancion_playlist(request):
+    """Quitar canción de una playlist"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        playlist_id = data.get('playlist_id')
+        cancion_id = data.get('cancion_id')
+        usuario_id = request.session['usuario_id']
+        
+        with connection.cursor() as cursor:
+            # Verificar que la playlist pertenece al usuario
+            cursor.execute("""
+                SELECT 1 FROM playlists 
+                WHERE playlist_id = %s AND usuario_id = %s
+            """, [playlist_id, usuario_id])
+            
+            if not cursor.fetchone():
+                return JsonResponse({'success': False, 'message': 'Playlist no encontrada'})
+            
+            # Quitar la canción
+            cursor.execute("""
+                DELETE FROM playlists_canciones 
+                WHERE playlist_id = %s AND cancion_id = %s
+            """, [playlist_id, cancion_id])
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Canción eliminada de la playlist'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
