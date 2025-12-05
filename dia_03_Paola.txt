@@ -1,0 +1,7 @@
+> ¿Qué hice ayer?
+  A: Terminé con mi parte de perfil de usuario.
+     Se testeo también esta parte y pasó todas las funciones.
+> ¿Qué haré hoy?
+  A: Hoy continuaré haciendo funciones para testear las partes realizadas por mis compañeros de equipo.
+> Impedimentos detectados:
+  - Problemas con el template del perfil a la hora de ver si se adapta al diseño de la página web en general.
