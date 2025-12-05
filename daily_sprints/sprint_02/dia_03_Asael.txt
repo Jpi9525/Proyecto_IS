@@ -1,0 +1,7 @@
+¿Qué Hice Ayer?
+	Ayer puse en funcionamiento de la barra de búsqueda, para búsquedas globales y cargue musica en la base de datos
+¿Qué Haré Hoy?
+    	Hoy pienso mostrar en el feed las canciones que se encuentran en la base de datos
+Impedimentos Detectados
+	No se muestra la canción cuando se busca
+	
