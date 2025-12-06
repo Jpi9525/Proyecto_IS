@@ -1,0 +1,7 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer termine las descargas sin conexion
+• ¿Qué haré hoy?
+Hoy hare el sprint retrospective y el sprint review y a depurar un poco el codigo
+• Impedimentos detectados
+Ninguno
