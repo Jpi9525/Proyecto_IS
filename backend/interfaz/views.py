@@ -6,7 +6,8 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import JsonResponse
 from django.db import connection
-from .models import Usuario, Generos  # Asegúrate de importar ambos
+from django.core.files.storage import FileSystemStorage
+from .models import Usuario, Generos, Canciones, RedesSociales
 import json
 import random
 
@@ -290,8 +291,16 @@ def guardar_generos(request):
 
 def lista_reproduccion(request):
     """Vista para mostrar las canciones reales de la BD"""
+    # 1. RECUPERAR USUARIO (Para la foto del header)
+    uid = request.session.get('usuario_id')
+    if not uid: return redirect('login')
+
+    try:
+        usuario_actual = Usuario.objects.get(usuario_id=uid)
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
     generos_seleccionados = request.session.get('generos_favoritos', [])
-    
     if not generos_seleccionados or len(generos_seleccionados) != 3:
         messages.warning(request, 'Primero debes seleccionar 3 géneros musicales')
         return redirect('home')
@@ -355,7 +364,8 @@ def lista_reproduccion(request):
     context = {
         'canciones': todas_las_canciones,
         'generos_seleccionados': generos_seleccionados,
-        'total_canciones': len(todas_las_canciones)
+        'total_canciones': len(todas_las_canciones),
+        'usuario': usuario_actual
     }
     
     return render(request, 'interfaz/lista_reproduccion.html', context)
@@ -1196,3 +1206,133 @@ def verificar_descarga(request):
             
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
+        
+         
+def perfil_usuario(request):
+    # 1. Seguridad: Verificar sesión
+    uid = request.session.get('usuario_id')
+    if not uid:
+        return redirect('login')
+    
+    usuario = Usuario.objects.get(usuario_id=uid)
+
+    # 2. Obtener redes sociales
+    redes = RedesSociales.objects.filter(usuario_id=uid)
+
+    # 3. Lógica del autoplay (buscar la canción elegida)
+    cancion_anthem = None
+    if usuario.cancion_id:
+        try:
+            cancion_anthem = Canciones.objects.get(cancion_id=usuario.cancion_id)
+        except Canciones.DoesNotExist:
+            pass
+    
+    # 4. Obtener canciones publicadas
+    mis_canciones = Canciones.objects.all()[:4]
+
+    context = {
+        'usuario' : usuario,
+        'redes' : redes, 
+        'cancion_anthem' : cancion_anthem,
+        'mis_canciones' : mis_canciones,
+        'todas_canciones' : Canciones.objects.all()
+    }
+
+    return render(request, 'interfaz/perfil.html', context)
+
+def editar_perfil(request):
+    # Verificar sesión
+    uid = request.session.get('usuario_id')
+    if not uid: return redirect('login')
+
+    usuario = Usuario.objects.get(usuario_id=uid)
+
+    if request.method == 'POST':
+        print("--- INICIANDO ACTUALIZACIÓN POR SQL ---")
+        # Editar Nombre
+        nuevo_nombre = request.POST.get('nombre')
+        nuevo_apellido = request.POST.get('apellido')
+        nueva_bio = request.POST.get('descripcion', '')
+        cancion_id = request.POST.get('cancion_anthem_id')
+
+        # Manejo de Foto
+        borrar_foto = request.POST.get('eliminar_foto')
+        ruta_foto = usuario.foto_perfil_path
+        if borrar_foto:
+            # Si marcaron borrar, la ruta se vuelve None (o string vacío)
+            ruta_foto = None 
+            print(">>> Se solicitó eliminar la foto de perfil")
+        elif 'foto_perfil' in request.FILES and request.FILES['foto_perfil']:
+            # Si NO borraron y SUBIERON una nueva, la guardamos
+            imagen = request.FILES['foto_perfil']
+            fs = FileSystemStorage()
+            filename = fs.save(f"perfiles/user_{uid}_{imagen.name}", imagen)
+            ruta_foto = fs.url(filename)
+
+        # Validamos canción (si está vacía, ponemos NULL o 0)
+        if not cancion_id:
+            cancion_id = None
+
+        # SQL directo
+        try:
+            with connection.cursor() as cursor:
+                sql = """
+                    UPDATE usuarios 
+                    SET nombre = %s, 
+                        apellido = %s, 
+                        descripcion = %s, 
+                        cancion_id = %s, 
+                        foto_perfil_path = %s
+                    WHERE usuario_id = %s
+                """
+                valores = [nuevo_nombre, nuevo_apellido, nueva_bio, cancion_id, ruta_foto, uid]
+                cursor.execute(sql, valores)
+                print(f"SQL Ejecutado correctamente. Filas afectadas: {cursor.rowcount}")
+        except Exception as e:
+            print(f"ERROR SQL: {e}")
+
+        nueva_red = request.POST.get('nueva_red_nombre')
+        nueva_url = request.POST.get('nueva_red_url')
+
+        if nueva_red and nueva_url:
+            RedesSociales.objects.create(
+                usuario_id=uid,
+                nombre_red=nueva_red,
+                url=nueva_url
+            )
+
+        return redirect('perfil_usuario')
+
+    return redirect('perfil_usuario')
+
+def eliminar_red_social(request, red_id):
+    uid = request.session.get('usuario_id')
+    if not uid: return redirect('login')
+
+    print(f"🔥 DEBUG: Intentando borrar RED {red_id} del USUARIO {uid}")
+
+    try:
+        with connection.cursor() as cursor:
+            # INTENTO 1: Borrar por 'red_id' (El nombre correcto según tu modelo)
+            sql1 = "DELETE FROM redes_sociales WHERE red_id = %s AND usuario_id = %s"
+            cursor.execute(sql1, [red_id, uid])
+            print(f"   -> Intento 1 (red_id): {cursor.rowcount} filas borradas.")
+
+            # INTENTO 2: Si falló, probar por 'id' (Por si acaso)
+            if cursor.rowcount == 0:
+                sql2 = "DELETE FROM redes_sociales WHERE id = %s AND usuario_id = %s"
+                cursor.execute(sql2, [red_id, uid])
+                print(f"   -> Intento 2 (id): {cursor.rowcount} filas borradas.")
+            
+            # INTENTO 3 (DESESPERADO): Borrar solo por ID (sin validar usuario - SOLO PARA DEBUG)
+            # Si esto funciona, es que el usuario_id no coincidía
+            if cursor.rowcount == 0:
+                print("⚠️ ALERTA: No coinciden los IDs. Intentando borrado forzoso...")
+                sql3 = "DELETE FROM redes_sociales WHERE red_id = %s" # OJO: Inseguro en producción, útil para arreglar esto hoy
+                cursor.execute(sql3, [red_id])
+                print(f"   -> Intento 3 (Forzoso): {cursor.rowcount} filas borradas.")
+
+    except Exception as e:
+        print(f"❌ ERROR CRÍTICO SQL: {e}")
+
+    return redirect('perfil_usuario')

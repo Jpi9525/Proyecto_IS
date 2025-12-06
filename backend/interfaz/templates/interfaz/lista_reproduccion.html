@@ -722,7 +722,21 @@
 {% csrf_token %}
     <!-- Header -->
     <div class="header">
-        <div class="user-profile">U</div>
+        <a href="{% url 'perfil_usuario' %}" class="user-profile" 
+            style="text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 0; width: 40px; height: 40px; border-radius: 50%;">
+                
+                {% if usuario.foto_perfil_path %}
+                    <img src="{{ usuario.foto_perfil_path }}" 
+                        alt="Perfil" 
+                        style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    <div style="width: 100%; height: 100%; background: #ff1493; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        {{ usuario.nombre|slice:":1"|default:"U" }}
+                    </div>
+                {% endif %}
+    
+        </a>
+        
         <div class="search-container">
             <span class="search-icon">🔍</span>
             <input type="text" class="search-bar" placeholder="Buscar en tu lista...">

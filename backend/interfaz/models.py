@@ -95,11 +95,13 @@ class Usuario(models.Model):
         managed = False
         db_table = 'usuarios'
 
-class RedesSociales(models.Model):
-    red_id = models.AutoField(primary_key=True)
-    usuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id')
-    nombre_red = models.CharField(max_length=50, blank=True, null=True)
-    url = models.CharField(max_length=255, blank=True, null=True)
+class Playlist(models.Model):
+    playlist_id = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id', blank=True, null=True)
+    nombre = models.CharField(max_length=30, blank=True, null=True)
+    fecha_creacion = models.DateField(blank=True, null=True)
+    imagen_portada = models.CharField(max_length=500, blank=True, null=True)
+    es_publica = models.IntegerField(default=0)
 
     class Meta:
         managed = False
@@ -152,3 +154,13 @@ class DescargasOffline(models.Model):
             ['usuario', 'album_id'],
             ['usuario', 'playlist_id'],
         ]
+
+class RedesSociales(models.Model):
+    red_id = models.AutoField(primary_key=True, db_column='id') 
+    usuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id')
+    nombre_red = models.CharField(max_length=50, blank=True, null=True)
+    url = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'redes_sociales'
