@@ -1306,33 +1306,49 @@ def editar_perfil(request):
     return redirect('perfil_usuario')
 
 def eliminar_red_social(request, red_id):
+    # 1. Seguridad básica
     uid = request.session.get('usuario_id')
     if not uid: return redirect('login')
 
-    print(f"🔥 DEBUG: Intentando borrar RED {red_id} del USUARIO {uid}")
+    print(f"\n🛑 --- INICIO DIAGNÓSTICO DE BORRADO ---")
+    print(f"Intentando borrar ID: {red_id} | Usuario actual: {uid}")
 
     try:
         with connection.cursor() as cursor:
-            # INTENTO 1: Borrar por 'red_id' (El nombre correcto según tu modelo)
-            sql1 = "DELETE FROM redes_sociales WHERE red_id = %s AND usuario_id = %s"
-            cursor.execute(sql1, [red_id, uid])
-            print(f"   -> Intento 1 (red_id): {cursor.rowcount} filas borradas.")
+            # PASO 1: ¿CÓMO SE LLAMAN LAS COLUMNAS?
+            # Le preguntamos a la base de datos qué columnas tiene la tabla
+            cursor.execute("DESCRIBE redes_sociales")
+            columnas = [col[0] for col in cursor.fetchall()]
+            print(f"📋 Las columnas en la BD son: {columnas}")
 
-            # INTENTO 2: Si falló, probar por 'id' (Por si acaso)
-            if cursor.rowcount == 0:
-                sql2 = "DELETE FROM redes_sociales WHERE id = %s AND usuario_id = %s"
-                cursor.execute(sql2, [red_id, uid])
-                print(f"   -> Intento 2 (id): {cursor.rowcount} filas borradas.")
+            # PASO 2: INTENTAR BORRAR SEGÚN EL NOMBRE QUE ENCONTREMOS
+            filas_borradas = 0
             
-            # INTENTO 3 (DESESPERADO): Borrar solo por ID (sin validar usuario - SOLO PARA DEBUG)
-            # Si esto funciona, es que el usuario_id no coincidía
-            if cursor.rowcount == 0:
-                print("⚠️ ALERTA: No coinciden los IDs. Intentando borrado forzoso...")
-                sql3 = "DELETE FROM redes_sociales WHERE red_id = %s" # OJO: Inseguro en producción, útil para arreglar esto hoy
-                cursor.execute(sql3, [red_id])
-                print(f"   -> Intento 3 (Forzoso): {cursor.rowcount} filas borradas.")
+            if 'id' in columnas:
+                print("👉 Detecté columna 'id'. Usando esa...")
+                # Probamos borrando solo por ID primero para ver si es el usuario lo que falla
+                cursor.execute("DELETE FROM redes_sociales WHERE id = %s", [red_id])
+                filas_borradas = cursor.rowcount
+                
+            elif 'red_id' in columnas:
+                print("👉 Detecté columna 'red_id'. Usando esa...")
+                cursor.execute("DELETE FROM redes_sociales WHERE red_id = %s", [red_id])
+                filas_borradas = cursor.rowcount
+            
+            else:
+                # Si se llama de otra forma rara (ej: 'red_social_id')
+                nombre_id = columnas[0] # Asumimos que la primera es la PK
+                print(f"👉 Usando la primera columna encontrada: '{nombre_id}'")
+                cursor.execute(f"DELETE FROM redes_sociales WHERE {nombre_id} = %s", [red_id])
+                filas_borradas = cursor.rowcount
+
+            if filas_borradas > 0:
+                print(f"✅ ¡ÉXITO! Se borraron {filas_borradas} filas.")
+            else:
+                print("⚠️ FRACASO: La consulta corrió pero no borró nada. El ID no existía.")
 
     except Exception as e:
-        print(f"❌ ERROR CRÍTICO SQL: {e}")
+        print(f"❌ ERROR EXPLÍCITO: {e}")
 
+    print("🛑 --- FIN DIAGNÓSTICO ---\n")
     return redirect('perfil_usuario')
