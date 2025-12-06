@@ -96,9 +96,10 @@ class Usuario(models.Model):
         db_table = 'usuarios'
 
 class RedesSociales(models.Model):
-    usuario_id = models.IntegerField() # Lo vinculamos manualmente al ID de usuario
-    nombre_red = models.CharField(max_length=50) #Ej. Facebook, Instagram
-    url = models.URLField(max_length=200)
+    red_id = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id')
+    nombre_red = models.CharField(max_length=50, blank=True, null=True)
+    url = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         managed = False

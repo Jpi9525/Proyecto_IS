@@ -3,7 +3,7 @@ from django.contrib.auth.hashers import make_password
 from faker import Faker
 import datetime
 # IMPORTANTE: Importamos los nombres EXACTOS de tu models.py
-from ..models import Usuario, Generos, Canciones, Albumes, Artistas
+from ..models import Usuario, Generos, Canciones, Albumes, Artistas, RedesSociales
 
 fake = Faker()
 
@@ -47,3 +47,11 @@ class CancionFactory(factory.django.DjangoModelFactory):
     # TimeField necesita un objeto time, no un string
     duracion = datetime.time(0, 3, 30) 
     ruta_archivo = "canciones/demo.mp3"
+
+class RedesSocialesFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = RedesSociales
+    
+    usuario = factory.SubFactory(UsuarioFactory)
+    nombre_red = "Instagram"
+    url = "https://instagram.com/test"
