@@ -1,6 +1,7 @@
 ¿Qué Hice Ayer?
 	Se mostró en el feed las canciones que se encuentran en la base de datos, también se hizo el sistema de like/dislike 
 ¿Qué Haré Hoy?
-    	Hoy pienso hacer el sistema de puntuación a las canciones, y el sistema de reseñas
+    	Hoy pienso hacer el sistema de puntuación a las canciones, y el sistema de reseñas. Tambien hacer la vista del reproductor de la cancion en pantalla completa
 Impedimentos Detectados
+
 	Ninguna por el momento
