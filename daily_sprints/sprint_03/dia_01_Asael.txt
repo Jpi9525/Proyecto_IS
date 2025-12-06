@@ -1,0 +1,6 @@
+¿Qué Hice Ayer?
+	 Se realizo con éxito el sistema de puntuación a las canciones
+¿Qué Haré Hoy?
+    	Ayudar en la planeación del 3 sprint
+Impedimentos Detectados
+	No se cuenta con el reproductor de musica en pantalla completa lo que impide el avance del sistema de reseñas
