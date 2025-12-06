@@ -1,0 +1,8 @@
+> ¿Qué hice ayer?
+  A: Testeo de las funciones realizadas por mis compañeros.
+     Relleno de tabla donde explico los testeos y los resultados obtenidos.
+> ¿Qué haré hoy?
+  A: Hoy continuaré haciendo testing a las funciones.
+     Además, de añadir los resultados a un documento de casos de testing.
+> Impedimentos detectados:
+  - Coordinar con compañeros de equipo para el testing de sus indicadas funciones.
