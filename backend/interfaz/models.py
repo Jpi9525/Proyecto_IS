@@ -103,4 +103,52 @@ class RedesSociales(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'redes_sociales'
+        db_table = 'playlists'
+
+
+class PlaylistsCanciones(models.Model):
+    playlist = models.ForeignKey(Playlist, models.DO_NOTHING, db_column='playlist_id')
+    cancion = models.ForeignKey(Canciones, models.DO_NOTHING, db_column='cancion_id')
+    orden = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'playlists_canciones'
+
+
+class FavoritosCanciones(models.Model):
+    usuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id')
+    cancion = models.ForeignKey(Canciones, models.DO_NOTHING, db_column='cancion_id')
+    es_favorito = models.IntegerField(default=0)
+
+    class Meta:
+        managed = False
+        db_table = 'favoritos_canciones'
+
+
+class FavoritosAlbumes(models.Model):
+    usuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id')
+    album = models.ForeignKey(Albumes, models.DO_NOTHING, db_column='album_id')
+    es_favorito = models.IntegerField(default=0)
+
+    class Meta:
+        managed = False
+        db_table = 'favoritos_albumes'
+
+class DescargasOffline(models.Model):
+    """Modelo para canciones descargadas offline"""
+    descarga_id = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, db_column='usuario_id')
+    cancion_id = models.IntegerField(null=True, blank=True)
+    album_id = models.IntegerField(null=True, blank=True)
+    playlist_id = models.IntegerField(null=True, blank=True)
+    tipo = models.CharField(max_length=20)  # 'cancion', 'album', 'playlist'
+    fecha_descarga = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'descargas_offline'
+        unique_together = [
+            ['usuario', 'cancion_id'],
+            ['usuario', 'album_id'],
+            ['usuario', 'playlist_id'],
+        ]
