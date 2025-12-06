@@ -349,20 +349,6 @@ def lista_reproduccion(request):
         # Si hay error, usar canciones de ejemplo
         pass
     
-    # Si no hay suficientes canciones en la BD, agregar de ejemplo
-    if len(todas_las_canciones) < 10:
-        canciones_faltantes = 10 - len(todas_las_canciones)
-        for i in range(canciones_faltantes):
-            todas_las_canciones.append({
-                'id': f"demo_{i}",
-                'titulo': f"Canción demo {i+1}",
-                'duracion': "3:30",
-                'ruta_archivo': '','album': "Álbum demo",
-                'portada': 'https://via.placeholder.com/150?text=Demo',
-                'artista': "Artista demo",
-                'genero': random.choice(generos_seleccionados) if generos_seleccionados else 'Demo'
-            })
-    
     # Mezclar las canciones
     random.shuffle(todas_las_canciones)
     
@@ -866,5 +852,347 @@ def quitar_cancion_playlist(request):
             'message': 'Canción eliminada de la playlist'
         })
         
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+    
+# ============== DESCARGAS OFFLINE ==============
+
+@csrf_exempt
+def descargar_cancion(request):
+    """Descargar una canción para offline"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        cancion_id = data.get('cancion_id')
+        usuario_id = request.session['usuario_id']
+        
+        with connection.cursor() as cursor:
+            # Verificar si ya está descargada
+            cursor.execute("""
+                SELECT 1 FROM descargas_offline 
+                WHERE usuario_id = %s AND cancion_id = %s AND tipo = 'cancion'
+            """, [usuario_id, cancion_id])
+            
+            if cursor.fetchone():
+                # Ya existe, eliminar (toggle)
+                cursor.execute("""
+                    DELETE FROM descargas_offline 
+                    WHERE usuario_id = %s AND cancion_id = %s AND tipo = 'cancion'
+                """, [usuario_id, cancion_id])
+                
+                return JsonResponse({
+                    'success': True,
+                    'descargado': False,
+                    'message': 'Canción eliminada de descargas'
+                })
+            else:
+                # No existe, agregar
+                cursor.execute("""
+                    INSERT INTO descargas_offline (usuario_id, cancion_id, tipo)
+                    VALUES (%s, %s, 'cancion')
+                """, [usuario_id, cancion_id])
+                
+                return JsonResponse({
+                    'success': True,
+                    'descargado': True,
+                    'message': 'Canción guardada para offline'
+                })
+                
+    except Exception as e:
+        print(f"Error: {e}")
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def descargar_album(request):
+    """Descargar un álbum completo para offline"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        album_id = data.get('album_id')
+        usuario_id = request.session['usuario_id']
+        
+        with connection.cursor() as cursor:
+            # Verificar si ya está descargado
+            cursor.execute("""
+                SELECT 1 FROM descargas_offline 
+                WHERE usuario_id = %s AND album_id = %s AND tipo = 'album'
+            """, [usuario_id, album_id])
+            
+            if cursor.fetchone():
+                # Eliminar álbum y sus canciones
+                cursor.execute("""
+                    DELETE FROM descargas_offline 
+                    WHERE usuario_id = %s AND album_id = %s AND tipo = 'album'
+                """, [usuario_id, album_id])
+                
+                # También eliminar las canciones del álbum
+                cursor.execute("""
+                    DELETE FROM descargas_offline 
+                    WHERE usuario_id = %s AND tipo = 'cancion' AND cancion_id IN (
+                        SELECT cancion_id FROM canciones WHERE album_id = %s
+                    )
+                """, [usuario_id, album_id])
+                
+                return JsonResponse({
+                    'success': True,
+                    'descargado': False,
+                    'message': 'Álbum eliminado de descargas'
+                })
+            else:
+                # Agregar álbum
+                cursor.execute("""
+                    INSERT INTO descargas_offline (usuario_id, album_id, tipo)
+                    VALUES (%s, %s, 'album')
+                """, [usuario_id, album_id])
+                
+                # Agregar todas las canciones del álbum
+                cursor.execute("""
+                    INSERT IGNORE INTO descargas_offline (usuario_id, cancion_id, tipo)
+                    SELECT %s, cancion_id, 'cancion' FROM canciones WHERE album_id = %s
+                """, [usuario_id, album_id])
+                
+                # Contar canciones agregadas
+                cursor.execute("""
+                    SELECT COUNT(*) FROM canciones WHERE album_id = %s
+                """, [album_id])
+                total_canciones = cursor.fetchone()[0]
+                
+                return JsonResponse({
+                    'success': True,
+                    'descargado': True,
+                    'total_canciones': total_canciones,
+                    'message': f'Álbum guardado ({total_canciones} canciones)'
+                })
+                
+    except Exception as e:
+        print(f"Error: {e}")
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def descargar_playlist(request):
+    """Descargar una playlist completa para offline"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        playlist_id = data.get('playlist_id')
+        usuario_id = request.session['usuario_id']
+        
+        with connection.cursor() as cursor:
+            # Verificar si ya está descargada
+            cursor.execute("""
+                SELECT 1 FROM descargas_offline 
+                WHERE usuario_id = %s AND playlist_id = %s AND tipo = 'playlist'
+            """, [usuario_id, playlist_id])
+            
+            if cursor.fetchone():
+                # Eliminar playlist
+                cursor.execute("""
+                    DELETE FROM descargas_offline 
+                    WHERE usuario_id = %s AND playlist_id = %s AND tipo = 'playlist'
+                """, [usuario_id, playlist_id])
+                
+                return JsonResponse({
+                    'success': True,
+                    'descargado': False,
+                    'message': 'Playlist eliminada de descargas'
+                })
+            else:
+                # Agregar playlist
+                cursor.execute("""
+                    INSERT INTO descargas_offline (usuario_id, playlist_id, tipo)
+                    VALUES (%s, %s, 'playlist')
+                """, [usuario_id, playlist_id])
+                
+                # Agregar canciones de la playlist
+                cursor.execute("""
+                    INSERT IGNORE INTO descargas_offline (usuario_id, cancion_id, tipo)
+                    SELECT %s, cancion_id, 'cancion' FROM playlists_canciones WHERE playlist_id = %s
+                """, [usuario_id, playlist_id])
+                
+                # Contar canciones
+                cursor.execute("""
+                    SELECT COUNT(*) FROM playlists_canciones WHERE playlist_id = %s
+                """, [playlist_id])
+                total_canciones = cursor.fetchone()[0]
+                
+                return JsonResponse({
+                    'success': True,
+                    'descargado': True,
+                    'total_canciones': total_canciones,
+                    'message': f'Playlist guardada ({total_canciones} canciones)'
+                })
+                
+    except Exception as e:
+        print(f"Error: {e}")
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+def musica_offline(request):
+    """Vista para ver música descargada/offline del usuario"""
+    if 'usuario_id' not in request.session:
+        return redirect('login')
+    
+    usuario_id = request.session['usuario_id']
+    canciones = []
+    albumes = []
+    playlists = []
+    
+    try:
+        with connection.cursor() as cursor:
+            # Obtener canciones descargadas
+            cursor.execute("""
+                SELECT 
+                    c.cancion_id, c.titulo, c.duracion, c.ruta_archivo,
+                    a.titulo as album, a.imagen_portada_path,
+                    ar.nombre as artista, g.nombre as genero,
+                    d.fecha_descarga
+                FROM descargas_offline d
+                JOIN canciones c ON d.cancion_id = c.cancion_id
+                LEFT JOIN albumes a ON c.album_id = a.album_id
+                LEFT JOIN canciones_artistas ca ON c.cancion_id = ca.cancion_id 
+                    AND ca.tipo_participacion = 'Principal'
+                LEFT JOIN artistas ar ON ca.artista_id = ar.artista_id
+                LEFT JOIN canciones_generos cg ON c.cancion_id = cg.cancion_id
+                LEFT JOIN generos g ON cg.genero_id = g.genero_id
+                WHERE d.usuario_id = %s AND d.tipo = 'cancion'
+                ORDER BY d.fecha_descarga DESC
+            """, [usuario_id])
+            
+            for row in cursor.fetchall():
+                duracion = str(row[2]) if row[2] else "0:00"
+                if len(duracion) > 5:
+                    duracion = duracion[3:8]
+                
+                canciones.append({
+                    'id': row[0],
+                    'titulo': row[1] or 'Sin título',
+                    'duracion': duracion,
+                    'ruta_archivo': row[3],
+                    'album': row[4] or 'Sin álbum',
+                    'portada': row[5] or 'https://via.placeholder.com/80?text=Song',
+                    'artista': row[6] or 'Artista desconocido',
+                    'genero': row[7] or 'Sin género',
+                    'fecha_descarga': row[8]
+                })
+            
+            # Obtener álbumes descargados
+            cursor.execute("""
+                SELECT 
+                    a.album_id, a.titulo, a.imagen_portada_path,
+                    ar.nombre as artista,
+                    COUNT(c.cancion_id) as total_canciones,
+                    d.fecha_descarga
+                FROM descargas_offline d
+                JOIN albumes a ON d.album_id = a.album_id
+                LEFT JOIN albumes_artistas aa ON a.album_id = aa.album_id AND aa.rol = 'Principal'
+                LEFT JOIN artistas ar ON aa.artista_id = ar.artista_id
+                LEFT JOIN canciones c ON a.album_id = c.album_id
+                WHERE d.usuario_id = %s AND d.tipo = 'album'
+                GROUP BY a.album_id, a.titulo, a.imagen_portada_path, ar.nombre, d.fecha_descarga
+                ORDER BY d.fecha_descarga DESC
+            """, [usuario_id])
+            
+            for row in cursor.fetchall():
+                albumes.append({
+                    'id': row[0],
+                    'titulo': row[1] or 'Sin título',
+                    'portada': row[2] or 'https://via.placeholder.com/150?text=Album',
+                    'artista': row[3] or 'Artista desconocido',
+                    'total_canciones': row[4],
+                    'fecha_descarga': row[5]
+                })
+            
+            # Obtener playlists descargadas
+            cursor.execute("""
+                SELECT 
+                    p.playlist_id, p.nombre, p.imagen_portada,
+                    COUNT(pc.cancion_id) as total_canciones,
+                    d.fecha_descarga
+                FROM descargas_offline d
+                JOIN playlists p ON d.playlist_id = p.playlist_id
+                LEFT JOIN playlists_canciones pc ON p.playlist_id = pc.playlist_id
+                WHERE d.usuario_id = %s AND d.tipo = 'playlist'
+                GROUP BY p.playlist_id, p.nombre, p.imagen_portada, d.fecha_descarga
+                ORDER BY d.fecha_descarga DESC
+            """, [usuario_id])
+            
+            for row in cursor.fetchall():
+               playlists.append({
+                    'id': row[0],
+                    'nombre': row[1] or 'Sin nombre',
+                    'portada': row[2] or 'https://via.placeholder.com/150?text=Playlist',
+                    'total_canciones': row[3],
+                    'fecha_descarga': row[4]
+                })
+                
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    context = {
+        'canciones': canciones,
+        'albumes': albumes,
+        'playlists': playlists,
+        'total_canciones': len(canciones),
+        'total_albumes': len(albumes),
+        'total_playlists': len(playlists)
+    }
+    
+    return render(request, 'interfaz/musica_offline.html', context)
+
+
+@csrf_exempt
+def verificar_descarga(request):
+    """Verificar si un item está descargado"""
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False})
+    
+    tipo = request.GET.get('tipo')  # 'cancion', 'album', 'playlist'
+    item_id = request.GET.get('id')
+    usuario_id = request.session['usuario_id']
+    
+    try:
+        with connection.cursor() as cursor:
+            if tipo == 'cancion':
+                cursor.execute("""
+                    SELECT 1 FROM descargas_offline 
+                    WHERE usuario_id = %s AND cancion_id = %s AND tipo = 'cancion'
+                """, [usuario_id, item_id])
+            elif tipo == 'album':
+                cursor.execute("""
+                    SELECT 1 FROM descargas_offline 
+                    WHERE usuario_id = %s AND album_id = %s AND tipo = 'album'
+                """, [usuario_id, item_id])
+            elif tipo == 'playlist':
+                cursor.execute("""
+                    SELECT 1 FROM descargas_offline 
+                    WHERE usuario_id = %s AND playlist_id = %s AND tipo = 'playlist'
+                """, [usuario_id, item_id])
+            else:
+                return JsonResponse({'success': False})
+            
+            descargado = cursor.fetchone() is not None
+            
+            return JsonResponse({
+                'success': True,
+                'descargado': descargado
+            })
+            
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})

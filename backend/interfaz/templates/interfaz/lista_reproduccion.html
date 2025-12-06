@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -706,6 +707,14 @@
             .now-playing-info {
                 min-width: 100px;
             }
+            .control-btn.downloaded {
+               
+             color: #1db954;
+            }
+
+            .control-btn.download-btn:hover {
+                color: #1db954;
+            }
         }
     </style>
 </head>
@@ -735,6 +744,10 @@
             <span class="filter-icon">💿</span>
             Álbumes
         </a>
+            <a href="{% url 'musica_offline' %}" class="filter-btn">
+        <span class="filter-icon">📥</span>
+        Sin Conexión
+        </a>
         {% for genero in generos_seleccionados %}
         <button class="filter-btn genre-filter" data-genre="{{ genero }}">
             <span class="filter-icon">🎵</span>
@@ -756,7 +769,7 @@
         <!-- Grid de canciones -->
         <div class="songs-grid" id="songsGrid">
             {% for cancion in canciones %}
-            <div class="song-card" data-id="{{ cancion.id }}" data-genre="{{ cancion.genero }}">
+            <div class="song-card" data-id="{{ cancion.id }}" data-genre="{{ cancion.genero }}" data-ruta="{{ cancion.ruta_archivo }}">
                 <div class="song-header">
                     <div class="song-cover">
                         <img src="{{ cancion.portada }}" alt="{{ cancion.titulo }}">
@@ -774,6 +787,7 @@
                     <div class="control-buttons">
                         <button class="control-btn add-playlist-btn" title="Agregar a playlist">➕</button>
                         <button class="control-btn favorito-btn" title="Agregar a favoritos">🤍</button>
+                        <button class="control-btn download-btn" title="Descargar">📥</button>
                         <button class="control-btn dislike-btn" title="No me gusta">👎</button>
                     </div>
                     <div class="rating">
@@ -849,6 +863,7 @@
             </div>
         </div>
     </div>
+    <audio id="audioPlayer" style="display: none;"></audio>
     <script>
     // ========== CSRF TOKEN ==========
     function getCSRFToken() {
@@ -884,33 +899,75 @@
     }
 
     // ========== REPRODUCTOR ==========
-    function reproducirCancion(songId) {
-        const card = document.querySelector(`.song-card[data-id="${songId}"]`);
-        if (!card) return;
+// ========== REPRODUCTOR ==========
+function reproducirCancion(songId) {
+    const card = document.querySelector(`.song-card[data-id="${songId}"]`);
+    if (!card) return;
 
-        const titulo = card.querySelector('.song-title').textContent;
-        const artista = card.querySelector('.song-artist').textContent;
-        const portada = card.querySelector('.song-cover img').src;
+    const titulo = card.querySelector('.song-title').textContent;
+    const artista = card.querySelector('.song-artist').textContent;
+    const portada = card.querySelector('.song-cover img').src;
+    const rutaAudio = card.dataset.ruta; // Obtener la ruta del audio
 
-        document.getElementById('playerTitle').textContent = titulo;
-        document.getElementById('playerArtist').textContent = artista;
-        document.getElementById('playerCover').innerHTML = `<img src="${portada}">`;
+    // Actualizar UI del reproductor
+    document.getElementById('playerTitle').textContent = titulo;
+    document.getElementById('playerArtist').textContent = artista;
+    document.getElementById('playerCover').innerHTML = `<img src="${portada}">`;
 
-        currentSongId = songId;
-        isPlaying = true;
-        document.getElementById('mainPlayBtn').innerHTML = '⏸';
-        showToast(`Reproduciendo: ${titulo}`, 'success');
-    }
+    currentSongId = songId;
 
-    function togglePlay() {
-        if (!currentSongId) {
-            const firstCard = document.querySelector('.song-card');
-            if (firstCard) reproducirCancion(firstCard.dataset.id);
-            return;
+    // Reproducir audio real si hay ruta
+    if (rutaAudio && rutaAudio !== '' && rutaAudio !== 'None') {
+        audioPlayer.src = rutaAudio;
+        audioPlayer.play()
+            .then(() => {
+                isPlaying = true;
+                document.getElementById('mainPlayBtn').innerHTML = '⏸';
+                console.log('▶ Reproduciendo:', titulo);
+            })
+            .catch(error => {
+                console.log('Error al reproducir:', error);
+                isPlaying = true;
+                document.getElementById('mainPlayBtn').innerHTML = '⏸';
+                showToast(`Reproduciendo: ${titulo}`, 'success');
+            });
+            } else {
+                // Si no hay archivo de audio, simular reproducción
+                isPlaying = true;
+                document.getElementById('mainPlayBtn').innerHTML = '⏸';
+                showToast(`Reproduciendo: ${titulo}`, 'success');
+            }
         }
-        isPlaying = !isPlaying;
-        document.getElementById('mainPlayBtn').innerHTML = isPlaying ? '⏸' : '▶';
-    }
+
+        function pausarCancion() {
+            audioPlayer.pause();
+            isPlaying = false;
+            document.getElementById('mainPlayBtn').innerHTML = '▶';
+        }
+
+        function reanudarCancion() {
+            if (currentSongId) {
+                if (audioPlayer.src) {
+                    audioPlayer.play().catch(() => {});
+                }
+                isPlaying = true;
+                document.getElementById('mainPlayBtn').innerHTML = '⏸';
+            }
+        }
+
+        function togglePlay() {
+            if (!currentSongId) {
+                const firstCard = document.querySelector('.song-card');
+                if (firstCard) reproducirCancion(firstCard.dataset.id);
+                return;
+            }
+            
+            if (isPlaying) {
+                pausarCancion();
+            } else {
+                reanudarCancion();
+            }
+        }
 
     function siguienteCancion() {
         if (!currentSongId) return;
@@ -1157,9 +1214,92 @@
             });
         });
     });
+document.querySelectorAll('.download-btn').forEach(btn => {
+    btn.addEventListener('click', async function(e) {
+        e.stopPropagation();
+        const card = this.closest('.song-card');
+        const cancionId = card.dataset.id;
+        
+        if (!cancionId || cancionId.startsWith('demo_')) {
+            showToast('Canción de demostración', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/descargar/cancion/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({ cancion_id: cancionId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                if (data.descargado) {
+                    this.textContent = '✅';
+                    this.classList.add('downloaded');
+                } else {
+                    this.textContent = '📥';
+                    this.classList.remove('downloaded');
+                }
+                showToast(data.message);
+            } else {
+                showToast(data.message || 'Error', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Error de conexión', 'error');
+        }
+    });
+});
+// ========== EVENTOS DEL AUDIO ==========
+// Cuando termina una canción, reproducir la siguiente
+audioPlayer.addEventListener('ended', function() {
+    siguienteCancion();
+});
 
+// Actualizar barra de progreso
+audioPlayer.addEventListener('timeupdate', function() {
+    if (audioPlayer.duration) {
+        const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+        document.querySelector('.progress-fill').style.width = progress + '%';
+        
+        // Actualizar tiempos
+        const times = document.querySelectorAll('.time');
+        times[0].textContent = formatTime(audioPlayer.currentTime);
+        times[1].textContent = formatTime(audioPlayer.duration);
+    }
+});
+
+// Click en barra de progreso
+document.querySelector('.progress-track').addEventListener('click', function(e) {
+    if (audioPlayer.duration) {
+        const rect = this.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        audioPlayer.currentTime = percent * audioPlayer.duration;
+    }
+});
+
+// Formatear tiempo
+function formatTime(seconds) {
+    if (isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Volumen
+document.querySelector('.volume-slider').addEventListener('click', function(e) {
+    const rect = this.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    document.querySelector('.volume-fill').style.width = (percent * 100) + '%';
+    audioPlayer.volume = percent;
+});
     console.log('✅ Reproductor inicializado con CSRF');
     </script>
-    <audio id="audioPlayer" style="display: none;"></audio>
+    <script src="{% static 'interfaz/js/reproductor.js' %}"></script>
     </body>
 </html>

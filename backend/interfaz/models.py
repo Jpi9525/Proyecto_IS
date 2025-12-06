@@ -136,3 +136,21 @@ class FavoritosAlbumes(models.Model):
     class Meta:
         managed = False
         db_table = 'favoritos_albumes'
+
+class DescargasOffline(models.Model):
+    """Modelo para canciones descargadas offline"""
+    descarga_id = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, db_column='usuario_id')
+    cancion_id = models.IntegerField(null=True, blank=True)
+    album_id = models.IntegerField(null=True, blank=True)
+    playlist_id = models.IntegerField(null=True, blank=True)
+    tipo = models.CharField(max_length=20)  # 'cancion', 'album', 'playlist'
+    fecha_descarga = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'descargas_offline'
+        unique_together = [
+            ['usuario', 'cancion_id'],
+            ['usuario', 'album_id'],
+            ['usuario', 'playlist_id'],
+        ]

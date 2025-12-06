@@ -34,4 +34,11 @@ urlpatterns = [
     path('api/playlist/agregar-cancion/', views.agregar_cancion_playlist, name='agregar_cancion_playlist'),
     path('api/playlist/quitar-cancion/', views.quitar_cancion_playlist, name='quitar_cancion_playlist'),
     path('api/playlists/usuario/', views.obtener_playlists_usuario, name='obtener_playlists_usuario'),
+        # Descargas Offline
+    path('musica-offline/', views.musica_offline, name='musica_offline'),
+    path('api/descargar/cancion/', views.descargar_cancion, name='descargar_cancion'),
+    path('api/descargar/album/', views.descargar_album, name='descargar_album'),
+    path('api/descargar/playlist/', views.descargar_playlist, name='descargar_playlist'),
+    path('api/verificar-descarga/', views.verificar_descarga, name='verificar_descarga'),
+
 ]

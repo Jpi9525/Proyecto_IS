@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -265,6 +266,12 @@
         }
         .toast.success { border-left: 4px solid #00c853; }
         .toast.error { border-left: 4px solid #ff1744; }
+
+        .download-album-btn.downloaded {
+            background: #1db954;
+            border-color: #1db954;
+            color: white;
+        }
         
         @media (max-width: 768px) {
             .album-header {
@@ -283,6 +290,7 @@
     </style>
 </head>
 <body>
+    {% csrf_token %}
     <button class="back-btn" onclick="history.back()">←</button>
 
     <div class="album-header">
@@ -303,6 +311,7 @@
     <div class="actions">
         <button class="play-all-btn" id="playAllBtn" title="Reproducir todo">▶</button>
         <button class="shuffle-btn" id="shuffleBtn">🔀 Aleatorio</button>
+        <button class="shuffle-btn download-album-btn" id="downloadAlbumBtn" data-album-id="{{ album.id }}">📥 Descargar</button>
     </div>
 
     <div class="songs-container">
@@ -588,8 +597,42 @@
                 showToast('Error al procesar', 'error');
             }
         });
+        // Descargar álbum completo
+        document.getElementById('downloadAlbumBtn').addEventListener('click', async function() {
+            const albumId = this.dataset.albumId;
+            
+            try {
+                const response = await fetch('/api/descargar/album/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ album_id: albumId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.descargado) {
+                        this.innerHTML = '✅ Descargado';
+                        this.classList.add('downloaded');
+                    } else {
+                        this.innerHTML = '📥 Descargar';
+                        this.classList.remove('downloaded');
+                    }
+                    showToast(data.message);
+                } else {
+                    showToast(data.message || 'Error', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Error de conexión', 'error');
+            }
+        });
 
         console.log('Reproductor de álbum inicializado con', songsList.length, 'canciones');
     </script>
+    <script src="{% static 'interfaz/js/reproductor.js' %}"></script>
 </body>
 </html>
