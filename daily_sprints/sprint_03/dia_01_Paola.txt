@@ -1,0 +1,8 @@
+> ¿Qué hice ayer?
+  A: Añadir los resultados a un documento de casos de testing.
+     Tesing a ciertas funciones y volver añadir las funciones que yo había hecho por errores a la hora de hacer push.
+> ¿Qué haré hoy?
+  A: Hoy se hará el sprint planning.
+     Además de la actividad que me toque.
+> Impedimentos detectados:
+  - Comuncación limitada a la hora de utilizar git.
