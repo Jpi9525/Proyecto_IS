@@ -1,0 +1,7 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer termine de poner las reviews y retrospectivas del daily 2 y hacer que mi parte funcionara correctamente
+• ¿Qué haré hoy?
+Hoy hare el sprint planning y comenzare con la historia que me toque	
+• Impedimentos detectados
+Falta de organización a la hora de seleccionar las historias que vayan de la mano
