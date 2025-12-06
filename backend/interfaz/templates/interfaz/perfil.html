@@ -381,7 +381,18 @@
                 <input type="text" name="apellido" value="{{ usuario.apellido }}">
                 <label>Bio:</label>
                 <textarea name="descripcion" rows="3">{{ usuario.descripcion|default:"" }}</textarea>
-                <label>Foto:</label>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                
+                <label>Foto de Perfil:</label>
+                {% if usuario.foto_perfil_path %}
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <input type="checkbox" name="eliminar_foto" id="del_pic" value="1" style="width:auto; margin:0;">
+                        <label for="del_pic" style="color:#ff4444; font-size:0.85rem; margin:0; cursor:pointer;">
+                            <i class="fa-solid fa-trash"></i> Eliminar actual
+                        </label>
+                    </div>
+                    {% endif %}
+                </div>
                 <input type="file" name="foto_perfil">
                 
                 <hr style="border-color:#333; margin: 15px 0;">
@@ -396,7 +407,27 @@
                 </select>
 
                 <hr style="border-color:#333; margin: 15px 0;">
-                <label>Red Social:</label>
+
+                {% if redes %}
+                <label style="margin-bottom: 8px;">Tus redes actuales (Clic en la X para borrar):</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                    {% for red in redes %}
+                        <div style="background: #333; padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 0.9rem;">
+                            <i class="fa-brands fa-{{ red.nombre_red|lower }}" style="color: #ccc;"></i>
+                            
+                            <span style="color: white;">{{ red.nombre_red }}</span>
+                            
+                            <a href="{% url 'eliminar_red_social' red.red_id %}" 
+                                style="color: #ff4444; text-decoration: none; margin-left: 5px; font-weight: bold;"
+                                onclick="return confirm('¿Seguro que quieres borrar este enlace?')">
+                                ✕
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <label>Agregar Nueva Red Social</label>
                 <div style="display:flex; gap:10px;">
                     <select name="nueva_red_nombre" style="width: 40%;">
                         <option value="">Red...</option>
