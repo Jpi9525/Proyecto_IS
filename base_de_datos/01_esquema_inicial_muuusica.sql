@@ -213,3 +213,132 @@ CREATE TABLE api_externa (
 	endpoint_url VARCHAR(500),             
 	activa BOOLEAN DEFAULT FALSE
 );
+
+-- Crear tabla de reacciones (si no existe)
+CREATE TABLE reacciones_canciones (
+    reaccion_id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    cancion_id INT NOT NULL,
+    tipo ENUM('like', 'dislike') NOT NULL,
+    fecha_reaccion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_usuario_cancion (usuario_id, cancion_id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id) ON DELETE CASCADE,
+    FOREIGN KEY (cancion_id) REFERENCES canciones(cancion_id) ON DELETE CASCADE
+);
+
+-- Verificar
+SELECT * FROM reacciones_canciones;
+
+-- Crear tabla ratings_canciones
+CREATE TABLE ratings_canciones (
+    rating_id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    cancion_id INT NOT NULL,
+    valor TINYINT NOT NULL CHECK (valor BETWEEN 1 AND 5),
+    fecha_rating TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_usuario_cancion (usuario_id, cancion_id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id) ON DELETE CASCADE,
+    FOREIGN KEY (cancion_id) REFERENCES canciones(cancion_id) ON DELETE CASCADE,
+    INDEX idx_cancion_id (cancion_id),
+    INDEX idx_usuario_id (usuario_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Trigger para validar el valor del rating
+DELIMITER //
+CREATE TRIGGER check_rating_value BEFORE INSERT ON ratings_canciones
+FOR EACH ROW
+BEGIN
+    IF NEW.valor < 1 OR NEW.valor > 5 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'El rating debe estar entre 1 y 5';
+    END IF;
+END//
+DELIMITER ;
+
+-- Trigger para actualizar también en UPDATE
+DELIMITER //
+CREATE TRIGGER check_rating_value_update BEFORE UPDATE ON ratings_canciones
+FOR EACH ROW
+BEGIN
+    IF NEW.valor < 1 OR NEW.valor > 5 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'El rating debe estar entre 1 y 5';
+    END IF;
+END//
+DELIMITER ;
+
+-- Vista para obtener el promedio de ratings por canción
+CREATE VIEW vista_ratings_canciones AS
+SELECT 
+    c.cancion_id,
+    c.titulo,
+    COUNT(r.rating_id) AS total_ratings,
+    IFNULL(AVG(r.valor), 0) AS promedio_rating,
+    COUNT(CASE WHEN r.valor = 5 THEN 1 END) AS rating_5,
+    COUNT(CASE WHEN r.valor = 4 THEN 1 END) AS rating_4,
+    COUNT(CASE WHEN r.valor = 3 THEN 1 END) AS rating_3,
+    COUNT(CASE WHEN r.valor = 2 THEN 1 END) AS rating_2,
+    COUNT(CASE WHEN r.valor = 1 THEN 1 END) AS rating_1
+FROM canciones c
+LEFT JOIN ratings_canciones r ON c.cancion_id = r.cancion_id
+GROUP BY c.cancion_id, c.titulo;
+
+-- Procedimiento para calificar una canción
+DELIMITER //
+CREATE PROCEDURE sp_calificar_cancion(
+    IN p_usuario_id INT,
+    IN p_cancion_id INT,
+    IN p_valor TINYINT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SELECT 'Error al calificar la canción' AS mensaje;
+    END;
+    
+    START TRANSACTION;
+    
+    -- Eliminar rating anterior si existe
+    DELETE FROM ratings_canciones 
+    WHERE usuario_id = p_usuario_id 
+    AND cancion_id = p_cancion_id;
+    
+    -- Insertar nuevo rating
+    INSERT INTO ratings_canciones (usuario_id, cancion_id, valor)
+    VALUES (p_usuario_id, p_cancion_id, p_valor);
+    
+    COMMIT;
+    
+    SELECT 'Rating guardado exitosamente' AS mensaje;
+END//
+DELIMITER ;
+
+-- Procedimiento para obtener rating de usuario específico
+DELIMITER //
+CREATE PROCEDURE sp_obtener_rating_usuario(
+    IN p_usuario_id INT,
+    IN p_cancion_id INT
+)
+BEGIN
+    SELECT valor 
+    FROM ratings_canciones 
+    WHERE usuario_id = p_usuario_id 
+    AND cancion_id = p_cancion_id;
+END//
+DELIMITER ;
+
+-- Procedimiento para obtener estadísticas de rating
+DELIMITER //
+CREATE PROCEDURE sp_obtener_estadisticas_rating(IN p_cancion_id INT)
+BEGIN
+    SELECT 
+        COUNT(*) AS total_ratings,
+        IFNULL(AVG(valor), 0) AS promedio,
+        IFNULL(STDDEV(valor), 0) AS desviacion_estandar,
+        MIN(valor) AS min_rating,
+        MAX(valor) AS max_rating
+    FROM ratings_canciones 
+    WHERE cancion_id = p_cancion_id;
+END//
+DELIMITER ;
