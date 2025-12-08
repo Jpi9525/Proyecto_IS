@@ -1,0 +1,6 @@
+> ¿Qué hice ayer?
+  A: Comencé con el featuring de compartir álbum.
+> ¿Qué haré hoy?
+  A: Continuar con este featuring, agregándolo a canciones y listas de reproducción.
+> Impedimentos detectados:
+  - La estética de la página sea igual en todas las vistas.
