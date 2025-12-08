@@ -1,0 +1,7 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer termine de implementar la barra de reproduccion
+• ¿Qué haré hoy?
+arreglar partes del codigo y ayudar a los demas
+• Impedimentos detectados
+Se rompieron algunas funciones a la hora de hacer global la barra de reproducciones
