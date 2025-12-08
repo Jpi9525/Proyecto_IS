@@ -1,0 +1,7 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer hice el sprint planning y avance con la implementación de la barra de reproduccion
+• ¿Qué haré hoy?
+Hoy intentare terminar la barra de reproduccion y empezar con la siguiente historia
+• Impedimentos detectados
+Creación interna de una barra de reproducción en cada parte por lo que se volvió mas trabajo hacer una general para todos
