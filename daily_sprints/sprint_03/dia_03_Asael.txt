@@ -1,0 +1,6 @@
+¿Qué Hice Ayer?
+	 Ayer se realizo el sistema de reseñas y rating
+¿Qué Haré Hoy?
+    	Hoy pienso hacer el sistema de playlist compartidas para que se muestren a todos los usuarios en su menú principal
+Impedimentos Detectados
+	Ni idea de comer el sistema
