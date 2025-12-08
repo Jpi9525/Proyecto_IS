@@ -1,0 +1,6 @@
+¿Qué Hice Ayer?
+	 Ayer se hizo el sprint planning, y también se hizo el panel de reproduccion donde se muestran las reseñas y calificación de la canción en reproduccion
+¿Qué Haré Hoy?
+    	Hoy, pienso hacer el sistema de reseñas y rating estas mismas
+Impedimentos Detectados
+	Ninguna por el momento
