@@ -61,6 +61,12 @@ urlpatterns = [
     path('calificar-cancion/', views.calificar_cancion, name='calificar_cancion'),
     path('rating-estadisticas/<int:cancion_id>/', views.obtener_estadisticas_rating, name='estadisticas_rating'),
 
+    # Reseñas
+    path('api/resena/agregar/', views.agregar_resena, name='agregar_resena'),
+    path('api/resenas/cancion/<int:cancion_id>/', views.obtener_resenas_cancion, name='obtener_resenas_cancion'),
+    path('api/resena/like/', views.like_resena, name='like_resena'),
+    path('api/resena/eliminar/', views.eliminar_resena, name='eliminar_resena'),  # NUEVA
+
 ]
 
 # Esto permite que Django sirva las fotos subidas (solo en modo DEBUG)

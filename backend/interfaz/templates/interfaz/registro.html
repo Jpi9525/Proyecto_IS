@@ -5,219 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro con Verificación</title>
-    <style>
-
-        body{
-            background-color: #1D1D1D;
-            font-family:Verdana, Geneva, Tahoma, sans-serif;
-        }
-
-        .loginDiv{
-            width: 40%;
-            height: auto;
-            padding: 50px;
-            margin: 30px auto;
-            text-align: center;
-
-        }
-        .loginDiv h2{
-            color: rgb(255, 141, 160);
-            font-size:24px;
-            margin-bottom: 3%;
-        }
-        .loginDiv img{
-            width: 25%;
-            height: 25%;
-        }
-        .loginDiv form{
-            background-color: #85858518;
-            display: flex;
-            flex-direction: column;
-            padding: 30px;
-            border-radius: 10px;
-            width: 50%;
-            margin: auto;
-
-        }
-        .loginDiv form input[type="text"],
-        .loginDiv form input[type="email"],
-        .loginDiv form input[type="password"]{
-            width: 100%;
-            padding: 8px; 
-            border-radius: 8px;
-            box-sizing: border-box;
-            margin-bottom: 10px;
-            font-size: 15px;
-        }
-        .loginDiv p{
-            color: white;
-            text-align: left;
-            margin-bottom: 10px;
-        }
-        input[type="submit"] {
-            width: 250px;
-            max-width: 250px;
-            margin: 0px auto;
-            padding: 14px;
-            background: linear-gradient(135deg, rgb(245, 129, 149) 0%, #b84f9f 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        input[type="text"]:focus,
-        input[type="password"]:focus,
-        input[type="email"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        input[type="submit"]:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
-            animation: fadeIn 0.3s;
-            text-align: center;
-        }
-            @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-            }
-
-        .modal-content {
-            background-color: #63636392;
-            margin: 10% auto;
-            padding: 40px;
-            border-radius: 15px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
-            animation: slideDown 0.3s;
-
-        }
-
-                @keyframes slideDown {
-                    from {
-                        transform: translateY(-50px);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                }
-
-        .modal-content h3{
-            color: white;
-            margin-bottom: 18px;
-        }
-
-        .email-sent {
-            background: #ffffff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .email-sent p {
-            color: rgb(245, 129, 149);
-            font-size: 14px;
-        }
-
-        .verification-input {
-            width: 100%;
-            text-align: center;
-            font-size: 24px;
-            letter-spacing: 10px;
-            font-weight: bold;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 25px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #ff50b6 0%, #ff6b81 100%);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
-        }
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .error-message {
-            color: #d32f2f;
-            text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-
-        .success-message {
-            color: #2e7d32;
-            text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-                .info-box {
-                    background: #e3f2fd;
-                    padding: 15px;
-                    border-radius: 8px;
-                    margin-top: 20px;
-                    font-size: 13px;
-                    color: #1565c0;
-                }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-    </style>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link rel="stylesheet" href="{% static 'interfaz/css/styleLogin.css' %}">
 </head>
 <body>
     <div class="loginDiv">
-        <div><img src="{% static 'interfaz/imagenes/Inicio/LogoMuuviews.webp' %}" alt=""></div>
+        <div><img src="{%static 'interfaz/imagenes/Inicio/LogoMuuviews.webp'%}" alt=""></div>
         <h2>Crear Nueva Cuenta</h2>
         <form id="registroForm">
             {% csrf_token%}
@@ -236,7 +29,6 @@
             <input type="submit" id="submitBtn" value="Registrarse">
         </form>
     </div>
-
     <!-- MODAL DE VERIFICACIÓN -->
     <div id="verificationModal" class="modal">
         <div class="modal-content">
@@ -248,7 +40,6 @@
                     Revisa tu bandeja de entrada (y spam)
                 </p>
             </div>
-
             <p style="color: white; margin-bottom: 8px; font-weight: 500; text-align: left;">Ingresa el código:</p>
             <input style="color: rgb(255, 147, 165);" type="text" 
                    id="verificationCode" 
@@ -256,9 +47,7 @@
                    maxlength="6" 
                    placeholder="000000"
                    autocomplete="off">
-            
             <div id="messageDiv"></div>
-
             <div class="button-group">
                 <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
                 <button class="btn btn-primary" id="verifyBtn" onclick="verifyCode()">Verificar</button>
@@ -267,30 +56,21 @@
     </div>
 </body>
 <script >
-        // ====================
-        // CONFIGURACIÓN INICIAL
-        // ====================
-
-        // IMPORTANTE: Reemplaza estos valores con tus credenciales de EmailJS
-        const EMAIL_PUBLIC_KEY = "0zri3Dlk3nYr8r92J";  // Ejemplo: "user_abc123xyz"
-        const EMAIL_SERVICE_ID = "service_1u89fni";  // Ejemplo: "service_gmail"
-        const EMAIL_TEMPLATE_ID = "template_cdhq3t9"; // Ejemplo: "template_verification"
-
+        const EMAIL_PUBLIC_KEY = "0zri3Dlk3nYr8r92J";
+        const EMAIL_SERVICE_ID = "service_1u89fni"; 
+        const EMAIL_TEMPLATE_ID = "template_cdhq3t9"; 
         // Inicializar EmailJS
         (function() {
             console.log("Inicializando EmailJS...");
             emailjs.init(EMAIL_PUBLIC_KEY);
             console.log("EmailJS inicializado correctamente");
         })();
-
         // Variables globales
         let codigoGenerado = '';
         let datosUsuario = {};
-
         // ====================
         // EVENTO PRINCIPAL DEL FORMULARIO
         // ====================
-
         document.addEventListener('DOMContentLoaded', function() {
             console.log("DOM cargado, configurando eventos...");
             
@@ -309,32 +89,26 @@
                 const email = document.getElementById('email').value.trim();
                 const username = document.getElementById('username').value.trim();
                 const password = document.getElementById('password').value;
-                
                 console.log("Datos del formulario:", { name, email, username });
-                
                 // Validaciones básicas
                 if (name.length < 3) {
                     alert('El nombre debe tener al menos 3 caracteres');
                     return;
                 }
-                
                 if (username.length < 4) {
                     alert('El nombre de usuario debe tener al menos 4 caracteres');
                     return;
                 }
-                
                 if (password.length < 6) {
                     alert('La contraseña debe tener al menos 6 caracteres');
                     return;
                 }
-                
                 // Validar formato de email
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(email)) {
                     alert('Por favor ingresa un email válido');
                     return;
                 }
-                
                 // Guardar datos del usuario temporalmente
                 datosUsuario = {
                     name: name,
@@ -342,31 +116,24 @@
                     username: username,
                     password: password
                 };
-                
                 // Generar código de 6 dígitos
                 codigoGenerado = Math.floor(100000 + Math.random() * 900000).toString();
                 console.log("Código generado:", codigoGenerado);
-                
                 // Mostrar email en el modal
                 document.getElementById('userEmail').textContent = email;
-                
                 // Enviar email con el código
                 enviarCodigoEmail(email, name, codigoGenerado);
             });
         });
-
         // ====================
         // FUNCIÓN PARA ENVIAR EMAIL
         // ====================
-
         function enviarCodigoEmail(email, nombre, codigo) {
             console.log("Intentando enviar email a:", email);
-            
             // Deshabilitar el botón de registro mientras se envía
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.value = 'Enviando código...';
-            
             // Verificar que EmailJS esté disponible
             if (typeof emailjs === 'undefined') {
                 console.error("ERROR: EmailJS no está cargado");
@@ -375,7 +142,6 @@
                 submitBtn.value = 'Registrarse';
                 return;
             }
-            
             // Parámetros para el template de EmailJS
             const templateParams = {
                 email: email,
@@ -383,9 +149,7 @@
                 code: codigo,
                 from_name: 'Muuviews'
             };
-            
-            console.log("Enviando email con parámetros:", templateParams);
-            
+            console.log("Enviando email con parámetros:", templateParams); 
             // Enviar email usando EmailJS
             emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, templateParams)
                 .then(function(response) {
@@ -405,11 +169,9 @@
                     submitBtn.value = 'Registrarse';
                 });
         }
-
         // ====================
         // FUNCIONES DEL MODAL
         // ====================
-
         function mostrarModal() {
             console.log("Mostrando modal...");
             const modal = document.getElementById('verificationModal');
@@ -420,7 +182,6 @@
                 console.error("ERROR: No se encontró el modal con id 'verificationModal'");
             }
         }
-
         function closeModal() {
             console.log("Cerrando modal...");
             const modal = document.getElementById('verificationModal');
@@ -431,11 +192,9 @@
             document.getElementById('messageDiv').innerHTML = '';
             document.getElementById('messageDiv').style.display = 'none';
         }
-
         // ====================
         // VERIFICACIÓN DEL CÓDIGO
         // ====================
-
         function verifyCode() {
             console.log("Verificando código...");
             const codigoIngresado = document.getElementById('verificationCode').value.trim();
@@ -447,7 +206,6 @@
                 mostrarMensajeModal('Por favor ingresa los 6 dígitos', 'error');
                 return;
             }
-            
             if (codigoIngresado === codigoGenerado) {
                 console.log("✅ Código correcto");
                 mostrarMensajeModal('Código correcto. Registrando usuario...', 'success');
@@ -461,11 +219,9 @@
                 document.getElementById('verificationCode').value = '';
             }
         }
-
         // ====================
         // REGISTRO EN BASE DE DATOS
         // ====================
-
         function registrarUsuario() {
             console.log("Registrando usuario en base de datos...");
             
@@ -513,11 +269,9 @@
                 verifyBtn.textContent = 'Verificar';
             });
         }
-
         // ====================
         // FUNCIONES DE MENSAJES
         // ====================
-
         function mostrarMensajeModal(mensaje, tipo) {
             const messageDiv = document.getElementById('messageDiv');
             messageDiv.textContent = mensaje;
@@ -530,11 +284,9 @@
                 }, 3000);
             }
         }
-
         // ====================
         // VALIDACIÓN DE INPUT
         // ====================
-
         // Permitir solo números en el input de verificación
         document.addEventListener('DOMContentLoaded', function() {
             const verificationInput = document.getElementById('verificationCode');

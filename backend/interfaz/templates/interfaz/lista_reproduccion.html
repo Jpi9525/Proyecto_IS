@@ -4,827 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Tu Lista de Reproducción</title>
+    <link rel="stylesheet" href="{% static 'interfaz/css/styleListaReproduccion.css' %}">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <style>
-        :root {
-            --bg-dark: #121212;
-            --bg-card: #282828;
-            --bg-card-hover: #3a3a3a;
-            --text-primary: #ffffff;
-            --text-secondary: #b3b3b3;
-            --accent-pink: #ff1493;
-            --accent-pink-hover: #ff69b9;
-            --player-height: 100px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            padding-bottom: var(--player-height);
-        }
-
-        /* Header */
-        .header {
-            background: linear-gradient(180deg, rgba(40,40,40,0.8) 0%, transparent 100%);
-            padding: 20px 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(20px);
-        }
-
-        .user-profile {
-            width: 35px;
-            height: 35px;
-            background: var(--accent-pink);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .user-profile:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
-        }
-
-        .search-container {
-            flex: 1;
-            max-width: 500px;
-            margin: 0 40px;
-            position: relative;
-        }
-
-        .search-bar {
-            width: 100%;
-            padding: 12px 20px 12px 45px;
-            border-radius: 25px;
-            border: none;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .search-bar:focus {
-            background: rgba(255,255,255,0.15);
-            box-shadow: 0 0 0 2px var(--accent-pink);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-        }
-
-        /* Sección de filtros */
-        .filters-section {
-            padding: 20px 40px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 8px 20px;
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: var(--text-secondary);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .filter-btn:hover {
-            border-color: var(--accent-pink);
-            color: var(--accent-pink);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.3);
-        }
-
-        .filter-btn.active {
-            background: var(--accent-pink);
-            color: white;
-            border-color: var(--accent-pink);
-        }
-
-        .filter-icon {
-            font-size: 16px;
-        }
-
-        /* Contenedor principal */
-        .main-content {
-            padding: 0 40px 40px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .section-title {
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .view-options {
-            display: flex;
-            gap: 10px;
-        }
-
-        .view-btn {
-            padding: 8px;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .view-btn:hover {
-            color: var(--accent-pink);
-        }
-
-        /* Grid de canciones */
-        .songs-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-            max-width: 1500px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .song-card {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            min-width: 300px;
-        }
-
-        .song-card:hover {
-            background: var(--bg-card-hover);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.2);
-        }
-
-        .song-card:hover .play-overlay {
-            opacity: 1;
-        }
-
-        .song-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-            position: relative;
-        }
-
-        .song-cover {
-            width: 80px;
-            height: 80px;
-            background: #404040;
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .song-cover img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .play-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .play-icon {
-            width: 35px;
-            height: 35px;
-            background: var(--accent-pink);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        .play-icon:hover {
-            transform: scale(1.1);
-            background: var(--accent-pink-hover);
-        }
-
-        .song-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .song-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .song-artist {
-            font-size: 12px;
-            color: var(--text-secondary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .song-genre-tag {
-            display: inline-block;
-            padding: 3px 10px;
-            background: rgba(255, 20, 147, 0.2);
-            color: var(--accent-pink);
-            border-radius: 12px;
-            font-size: 11px;
-            margin-top: 5px;
-        }
-        .ratin g-container {
-            margin-top: 15px;
-            padding: 12px;
-            background: rgba(219, 28, 28, 1);
-            border-radius: 8px;
-        }
-
-        .current-rating {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            margin-bottom: 10px;
-        }
-
-        .average-rating {
-            font-size: 24px;
-            font-weight: bold;
-            color: gold;
-            min-width: 40px;
-        }
-
-        .stars-display {
-            display: flex;
-            gap: 2px;
-        }
-
-        .stars-display .star {
-            color: #555;
-            font-size: 16px;
-        }
-
-        .stars-display .star.filled {
-            color: gold;
-        }
-
-        .rating-count {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-left: auto;
-        }
-
-        .user-rating {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-top: 8px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .your-rating-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            min-width: 90px;
-        }
-
-        .rating-stars {
-            display: flex;
-            gap: 4px;
-        }
-
-        .rate-star {
-            font-size: 18px;
-            color: #555;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
-
-        .rate-star:hover,
-        .rate-star:hover ~ .rate-star {
-            color: gold;
-            transform: scale(1.2);
-        }
-
-        .rate-star[data-filled="true"],
-        .rate-star[data-filled="true"] ~ .rate-star {
-            color: gold;
-        }
-
-        .rate-star:hover::after {
-            content: attr(data-value);
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg-card);
-            color: gold;
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            white-space: nowrap;
-            opacity: 0;
-            animation: fadeIn 0.3s forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-
-        .rating-submitted {
-            animation: pulse 0.5s;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        /* Controles de canción */
-        .song-controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-
-        .control-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .control-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 18px;
-            transition: all 0.3s;
-            padding: 5px;
-        }
-
-        .control-btn:hover {
-            color: var(--accent-pink);
-            transform: scale(1.2);
-        }
-
-        .control-btn.favorito-active {
-            color: #ff1493;
-        }
-
-        .song-duration {
-            color: var(--text-secondary);
-            font-size: 12px;
-        }
-
-        .rating {
-            display: flex;
-            gap: 2px;
-        }
-
-        .star {
-            color: var(--text-secondary);
-            font-size: 12px;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .star:hover,
-        .star.active {
-            color: gold;
-        }
-
-        /* ============== MODAL PLAYLIST ============== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 25px;
-            width: 90%;
-            max-width: 400px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-header h2 {
-            font-size: 20px;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 24px;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .modal-close:hover {
-            color: white;
-        }
-
-        .crear-playlist-form {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .crear-playlist-form input {
-            flex: 1;
-            padding: 12px 15px;
-            border-radius: 8px;
-            border: none;
-            background: var(--bg-dark);
-            color: white;
-            outline: none;
-        }
-
-        .crear-playlist-form input:focus {
-            box-shadow: 0 0 0 2px var(--accent-pink);
-        }
-
-        .crear-playlist-form button {
-            padding: 12px 20px;
-            background: var(--accent-pink);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .crear-playlist-form button:hover {
-            background: var(--accent-pink-hover);
-        }
-
-        .playlists-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .playlist-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px;
-            background: var(--bg-dark);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .playlist-item:hover {
-            background: var(--bg-card-hover);
-            transform: translateX(5px);
-        }
-
-        .playlist-item-icon {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, var(--accent-pink), #8b5cf6);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .playlist-item-info h4 {
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-
-        .playlist-item-info p {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .no-playlists {
-            text-align: center;
-            padding: 30px;
-            color: var(--text-secondary);
-        }
-
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--bg-card);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
-            z-index: 3000;
-            opacity: 0;
-            transition: all 0.3s;
-        }
-
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
-        .toast.success {
-            border-left: 4px solid #00c853;
-        }
-
-        .toast.error {
-            border-left: 4px solid #ff1744;
-        }
-
-        /* Reproductor inferior */
-        .player {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: var(--player-height);
-            background: #181818;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            padding: 0 30px;
-            z-index: 1000;
-        }
-
-        .now-playing {
-            display: flex;
-            align-items: center;
-            flex: 1;
-            gap: 15px;
-        }
-
-        .now-playing-cover {
-            width: 60px;
-            height: 60px;
-            background: #404040;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        .now-playing-cover img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .now-playing-info {
-            min-width: 200px;
-        }
-
-        .now-playing-title {
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-
-        .now-playing-artist {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .player-controls {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .control-buttons-main {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .player-btn {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .player-btn:hover {
-            color: var(--accent-pink);
-            transform: scale(1.1);
-        }
-
-        .player-btn.main {
-            width: 40px;
-            height: 40px;
-            background: var(--accent-pink);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-
-        .player-btn.main:hover {
-            background: var(--accent-pink-hover);
-        }
-
-        .progress-bar {
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .time {
-            font-size: 11px;
-            color: var(--text-secondary);
-            min-width: 35px;
-        }
-
-        .progress-track {
-            flex: 1;
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 2px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--accent-pink);
-            border-radius: 2px;
-            width: 30%;
-            position: relative;
-        }
-
-        .progress-handle {
-            position: absolute;
-            right: -6px;
-            top: -4px;
-            width: 12px;
-            height: 12px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .progress-track:hover .progress-handle {
-            opacity: 1;
-        }
-
-        .volume-controls {
-            flex: 1;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .volume-slider {
-            width: 100px;
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 2px;
-            cursor: pointer;
-        }
-
-        .volume-fill {
-            height: 100%;
-            width: 70%;
-            background: var(--accent-pink);
-            border-radius: 2px;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .songs-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                padding: 15px 20px;
-            }
-            
-            .search-container {
-                margin: 0 20px;
-            }
-            
-            .filters-section,
-            .main-content {
-                padding: 15px 20px;
-            }
-            
-            .songs-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            
-            .song-card {
-                min-width: unset;
-            }
-            
-            .player {
-                padding: 0 15px;
-            }
-            
-            .now-playing-info {
-                min-width: 100px;
-            }
-            .control-btn.downloaded {
-               
-             color: #1db954;
-            }
-
-            .control-btn.download-btn:hover {
-                color: #1db954;
-            }
-        }
-    </style>
 </head>
 <body>
 {% csrf_token %}
@@ -937,19 +118,6 @@
                                 </div>
                                 <span class="rating-count">({{ cancion.total_ratings|default:0 }})</span>
                             </div>
-                            
-                            <div class="user-rating">
-                                <span class="your-rating-label">Tu calificación:</span>
-                                <div class="rating-stars" data-current-rating="{{ cancion.user_rating|default:0 }}">
-                                    {% for i in "12345"|make_list %}
-                                        <span class="rate-star" 
-                                            data-value="{{ i }}"
-                                            {% if i|add:0 <= cancion.user_rating|default:0 %}data-filled="true"{% endif %}>
-                                            ★
-                                        </span>
-                                    {% endfor %}
-                                </div>
-                            </div>
                         </div>
                     <div class="song-duration">{{ cancion.duracion }}</div>
                 </div>
@@ -1012,7 +180,124 @@
                 <div class="volume-fill"></div>
             </div>
         </div>
+        <!-- Botón para abrir el panel (junto al volumen en el reproductor) -->
+        <button class="expand-panel-btn" id="expandPanelBtn" title="Panel de reproducción">
+            <span class="expand-icon">^</span>
+        </button> 
     </div>
+
+<!-- Panel de Reproducción Expandido (HTML Mejorado) -->
+<div class="panel-reproduccion-overlay" id="panelReproduccion">
+    <div class="panel-reproduccion-container">
+        <div class="panel-header">
+            <button class="close-panel-btn" id="closePanelBtn">✕</button>
+        </div>
+        
+        <div class="panel-content">
+            <!-- Lado Izquierdo: Información de la Canción -->
+            <div class="panel-izquierdo">
+                <div class="panel-portada-container">
+                    <div class="panel-portada" id="panelPortadaContainer">
+                        <img src="" alt="Portada" class="portada-img" id="panelPortadaImg" style="display: none;">
+                        <div class="portada-placeholder" id="panelPortadaPlaceholder">
+                            <span class="placeholder-icon">🎵</span>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-info">
+                        <h1 class="panel-titulo" id="panelTitulo">Selecciona una canción</h1>
+                        <p class="panel-artista" id="panelArtista">-</p>
+                        <div class="panel-genero" id="panelGenero">-</div>
+                        
+                        <div class="panel-estadisticas">
+                            <div class="estadistica">
+                                <span class="estadistica-icon">👍</span>
+                                <span class="estadistica-text" id="panelLikes">0</span>
+                            </div>
+                            <div class="estadistica">
+                                <span class="estadistica-icon">👎</span>
+                                <span class="estadistica-text" id="panelDislikes">0</span>
+                            </div>
+                            <div class="estadistica">
+                                <span class="estadistica-icon">⭐</span>
+                                <span class="estadistica-text" id="panelRating">0.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lado Derecho: Reseñas -->
+            <div class="panel-derecho">
+                <div class="resenas-header">
+                    <h2 class="resenas-titulo">
+                        <span class="resenas-icon">💬</span>
+                        Reseñas
+                    </h2>
+                    <div class="resenas-header-info">
+                        <span class="resenas-count" id="resenasCount">0 reseñas</span>
+                        <span class="resenas-promedio" id="resenasPromedio">⭐ 0.0</span>
+                    </div>
+                </div>
+                
+                <!-- Formulario para agregar reseña -->
+                <div class="agregar-resena" id="agregarResenaForm">
+                    <div class="resena-usuario-info">
+                        <div class="usuario-avatar" id="usuarioAvatarResena">
+                            {% if usuario.foto_perfil_path %}
+                                <img src="{{ usuario.foto_perfil_path }}" alt="Avatar">
+                            {% else %}
+                                <div class="avatar-placeholder">
+                                    {{ usuario.nombre|slice:":1"|default:"U" }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="usuario-nombre">{{ usuario.nombre }}</div>
+                    </div>
+                    
+                    <textarea 
+                        id="nuevoComentario" 
+                        placeholder="¿Qué te parece esta canción?..."
+                        maxlength="500"
+                        rows="3"
+                    ></textarea>
+                    
+                    <div class="resena-controls">
+                        <div class="rating-input-container">
+                            <span class="rating-label">Tu calificación:</span>
+                            <div class="rating-stars-input" id="ratingInput">
+                                <span class="star-input" data-value="1">☆</span>
+                                <span class="star-input" data-value="2">☆</span>
+                                <span class="star-input" data-value="3">☆</span>
+                                <span class="star-input" data-value="4">☆</span>
+                                <span class="star-input" data-value="5">☆</span>
+                            </div>
+                            <span class="rating-value" id="ratingValue">0</span>
+                        </div>
+                        
+                        <div class="resena-buttons">
+                            <span class="contador-caracteres" id="contadorCaracteres">0/500</span>
+                            <button class="btn-agregar-resena" id="btnAgregarResena" disabled>
+                                <span class="btn-icon">📝</span>
+                                Publicar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lista de reseñas -->
+                <div class="resenas-lista" id="resenasLista">
+                    <!-- Mensaje cuando no hay reseñas -->
+                    <div class="sin-resenas" id="sinResenas">
+                        <div class="sin-resenas-icon">💬</div>
+                        <h3>No hay reseñas aún</h3>
+                        <p>Sé el primero en compartir tu opinión sobre esta canción</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <audio id="audioPlayer" style="display: none;"></audio>
     <script src="{% static 'interfaz/js/reproductor.js' %}"></script>
 </body>
@@ -1025,7 +310,7 @@
     // ============================================
     // VARIABLES GLOBALES
     // ============================================
-    let currentSong = null;
+    let currentSongId = null;
     let isPlaying = false;
     let selectedSongForPlaiylst = null;
     const audioPlayer = document.getElementById('audioPlayer');
@@ -1033,7 +318,12 @@
     let currentFilter = 'all';
     let timeoutBusqueda = null;
     let cancionesOriginalesHTML = '';
-
+    
+    const panelReproduccion = document.getElementById('panelReproduccion');
+    const expandPanelBtn = document.getElementById('expandPanelBtn');
+    const closePanelBtn = document.getElementById('closePanelBtn');
+    let currentRating = 0;
+    let currentCancionIdPanel = null;
     // ============================================
     // GUARDAR CANCIONES ORIGINALES AL CARGAR
     // ============================================
@@ -1049,6 +339,8 @@
         configurarEventosCanciones();
         configurarBuscador();
         configurarSistemaRating();
+        configurarPanelReproduccion(); 
+        sincronizarPanelConReproductor();
     });
     // Cargar lista de canciones
     document.querySelectorAll('.song-card').forEach((card, index) => {
@@ -1761,9 +1053,782 @@ document.querySelector('.volume-slider').addEventListener('click', function(e) {
 console.log('✅ Reproductor inicializado con CSRF');
 
 
+ // ============================================
+// CONFIGURAR PANEL DE REPRODUCCIÓN (CON ANIMACIONES)
+// ============================================
+function configurarPanelReproduccion() {
+    console.log('🎛️ Configurando panel de reproducción con animaciones...');
+    
+    // Verificar que los elementos existan
+    if (!panelReproduccion) {
+        console.error('❌ No se encontró el panel de reproducción');
+        return;
+    }
+    
+    if (!expandPanelBtn) {
+        console.error('❌ No se encontró el botón expandir');
+        return;
+    }
+    
+    if (!closePanelBtn) {
+        console.error('❌ No se encontró el botón cerrar');
+        return;
+    }
+    
+    // Variables para animaciones
+    let isPanelAnimating = false;
+    
+    // Abrir panel CON ANIMACIÓN
+    expandPanelBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        console.log('🖱️ Click en expandir, currentSongId:', currentSongId);
+        
+        if (isPanelAnimating) return;
+        
+        if (currentSongId) {
+            abrirPanelConAnimacion(currentSongId);
+            console.log('✅ Panel abriéndose con animación');
+        } else {
+            showToast('Selecciona una canción primero', 'error');
+            console.warn('⚠️ No hay canción seleccionada');
+        }
+    });
+    
+    // Cerrar panel CON ANIMACIÓN
+    closePanelBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        console.log('🖱️ Click en cerrar panel');
+        if (!isPanelAnimating) {
+            cerrarPanelConAnimacion();
+        }
+    });
+    
+    // Cerrar con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && panelReproduccion.classList.contains('active')) {
+            if (!isPanelAnimating) {
+                cerrarPanelConAnimacion();
+                console.log('⌨️ Panel cerrado con ESC');
+            }
+        }
+    });
+    
+    // Configurar sistema de rating
+    configurarRatingPanel();
+    
+    // Configurar botón agregar reseña
+    const btnAgregarResena = document.getElementById('btnAgregarResena');
+    if (btnAgregarResena) {
+        btnAgregarResena.addEventListener('click', agregarResena);
+    }
+    
+    console.log('✅ Panel de reproducción configurado con animaciones');
+}
+
+// ============================================
+// ANIMACIÓN PARA ABRIR PANEL (DESPLIEGUE DESDE ABAJO)
+// ============================================
+function abrirPanelConAnimacion(songId) {
+    isPanelAnimating = true;
+    
+    // Agregar clase activa para mostrar el overlay
+    panelReproduccion.classList.add('active');
+    
+    // Forzar reflow para que la animación funcione
+    void panelReproduccion.offsetWidth;
+    
+    // Agregar clase para animación de apertura
+    panelReproduccion.classList.add('opening');
+    
+    // Después de un breve delay, quitar la clase opening
+    setTimeout(() => {
+        panelReproduccion.classList.remove('opening');
+        isPanelAnimating = false;
+    }, 400); 
+    
+    // Actualizar información del panel
+    currentCancionIdPanel = songId;
+    actualizarPanelInfo();
+    cargarResenas(songId);
+    // Obtener rating real al abrir el panel
+    fetch(`/api/resenas/cancion/${songId}/`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                actualizarUIRating(
+                    songId,
+                    parseFloat(data.promedio_rating || 0),
+                    parseInt(data.total_ratings || 0),
+                    parseInt(data.user_rating || 0)
+                );
+            }
+        });
+
+    // Actualizar botón expandir
+    expandPanelBtn.classList.add('panel-abierto');
+    
+    // Bloquear scroll del body
+    document.body.style.overflow = 'hidden';
+    
+    // Forzar focus en el panel para que ESC funcione inmediatamente
+    panelReproduccion.focus();
+    
+    console.log('📊 Panel abierto con animación para canción:', songId);
+}
+
+// ============================================
+// ANIMACIÓN PARA CERRAR PANEL (RETRACCIÓN HACIA ABAJO)
+// ============================================
+function cerrarPanelConAnimacion() {
+    isPanelAnimating = true;
+    
+    // Agregar clase para animación de cierre
+    panelReproduccion.classList.add('closing');
+    
+    // Esperar a que termine la animación
+    setTimeout(() => {
+        panelReproduccion.classList.remove('active');
+        panelReproduccion.classList.remove('closing');
+        
+        // Quitar clase del botón expandir
+        expandPanelBtn.classList.remove('panel-abierto');
+        
+        // Restaurar scroll del body
+        document.body.style.overflow = '';
+        
+        isPanelAnimating = false;
+        
+        console.log('📊 Panel cerrado con animación');
+    }, 400); // Coincide con la duración de la animación CSS
+}
+
+// ============================================
+// ACTUALIZAR INFO DEL PANEL (CON SINCRONIZACIÓN)
+// ============================================
+async function actualizarPanelInfo() {
+    if (!currentSongId && !currentCancionIdPanel) {
+        console.warn('⚠️ No hay canción para actualizar en el panel');
+        return;
+    }
+    
+    const songId = currentCancionIdPanel || currentSongId;
+    const card = document.querySelector(`.song-card[data-id="${songId}"]`);
+    
+    if (!card) {
+        console.warn('⚠️ No se encontró la tarjeta de la canción');
+        return;
+    }
+    
+    // Obtener información básica de la tarjeta
+    const titulo = card.querySelector('.song-title')?.textContent || 'Sin título';
+    const artista = card.querySelector('.song-artist')?.textContent || 'Sin artista';
+    const portada = card.querySelector('.song-cover img')?.src || '';
+    const genero = card.querySelector('.song-genre-tag')?.textContent || '';
+    
+    // Actualizar elementos del panel (texto, portada, etc)
+    const panelTitulo = document.getElementById('panelTitulo');
+    const panelArtista = document.getElementById('panelArtista');
+    const panelPortadaImg = document.getElementById('panelPortadaImg');
+    const panelPortadaPlaceholder = document.getElementById('panelPortadaPlaceholder');
+    const panelGenero = document.getElementById('panelGenero');
+    
+    if (panelTitulo) panelTitulo.textContent = titulo;
+    if (panelArtista) panelArtista.textContent = artista;
+    if (panelGenero) panelGenero.textContent = genero;
+    
+    // Portada
+    if (panelPortadaImg && panelPortadaPlaceholder) {
+        if (portada && portada !== '' && !portada.includes('undefined')) {
+            panelPortadaImg.src = portada;
+            panelPortadaImg.style.display = 'block';
+            panelPortadaPlaceholder.style.display = 'none';
+        } else {
+            panelPortadaImg.style.display = 'none';
+            panelPortadaPlaceholder.style.display = 'flex';
+            const initials = artista.charAt(0).toUpperCase();
+            panelPortadaPlaceholder.innerHTML = `<span class="placeholder-icon">${initials}</span>`;
+        }
+    }
+    
+    // Ahora pedir al servidor las reseñas + estadísticas (incluye user_rating)
+    try {
+        const resp = await fetch(`/api/resenas/cancion/${songId}/`);
+        if (!resp.ok) throw new Error('Error al obtener reseñas');
+        const data = await resp.json();
+        if (data.success) {
+            // Actualizar lista de reseñas (si quieres mostrarla en el panel)
+            // Nota: la función cargarResenas ya hace algo parecido; aquí solo usamos estadísticos
+            // Actualizar promedio en panel
+            const panelRating = document.getElementById('panelRating');
+            if (panelRating && typeof data.promedio_rating !== 'undefined') {
+                panelRating.textContent = parseFloat(data.promedio_rating).toFixed(1);
+            }
+            
+            // Actualizar contador de reseñas
+            const resenasCount = document.getElementById('resenasCount');
+            if (resenasCount) {
+                const t = (data.resenas && data.resenas.length) ? data.resenas.length : 0;
+                resenasCount.textContent = `${t} reseña${t !== 1 ? 's' : ''}`;
+            }
+            
+            // Actualizar estrellas de rating en el panel para mostrar el rating del usuario
+            const userRating = data.user_rating || 0;
+            actualizarEstrellasRating(userRating); // función existente que pinta estrellas del panel
+            const ratingValue = document.getElementById('ratingValue');
+            if (ratingValue) ratingValue.textContent = userRating;
+            
+            // Actualizar container de rating en la tarjeta principal (si existe)
+            if (typeof actualizarUIRating === 'function') {
+                actualizarUIRating(songId, data.promedio_rating, data.total_ratings, userRating);
+            }
+        } else {
+            console.warn('No se devolvieron reseñas:', data.message);
+        }
+    } catch (err) {
+        console.error('Error actualizando panel info:', err);
+    }
+
+    // Actualizar estadísticas generales (si tienes otros elementos en el panel)
+    actualizarEstadisticasPanel(); // puede quedar para otras pequeñas actualizaciones
+    console.log('✅ Info del panel actualizada:', titulo);
+}
+
+// ============================================
+// ACTUALIZAR ESTADÍSTICAS DEL PANEL
+// ============================================
+async function actualizarEstadisticasPanel() {
+    if (!currentSongId) return;
+    try {
+        const card = document.querySelector(`.song-card[data-id="${currentSongId}"]`);
+        if (card) {
+            // intentar leer datos ya presentes en la tarjeta
+            const likeBtn = card.querySelector('.like-btn');
+            const likeCount = likeBtn ? likeBtn.querySelector('.like-count')?.textContent || '0' : '0';
+            const panelLikes = document.getElementById('panelLikes');
+            if (panelLikes) panelLikes.textContent = likeCount;
+
+        }
+    } catch (error) {
+        console.error('Error actualizando estadísticas:', error);
+    }
+}
 
 
+// ============================================
+// CONFIGURAR RATING DEL PANEL (MEJORADO)
+// ============================================
+function configurarRatingPanel() {
+    const ratingStars = document.querySelectorAll('.star-input');
+    let currentRating = 0;
+    
+    ratingStars.forEach((star) => {
+        star.addEventListener('click', function() {
+            currentRating = parseInt(this.dataset.value);
+            actualizarEstrellasRating(currentRating);
+            habilitarBotonResena();
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            const value = parseInt(this.dataset.value);
+            resaltarEstrellasHover(value);
+        });
+    });
+    
+    const ratingInput = document.getElementById('ratingInput');
+    if (ratingInput) {
+        ratingInput.addEventListener('mouseleave', function() {
+            actualizarEstrellasRating(currentRating);
+        });
+    }
+    
+    // Textarea de comentario
+    const comentarioTextarea = document.getElementById('nuevoComentario');
+    const contadorCaracteres = document.getElementById('contadorCaracteres');
+    
+    if (comentarioTextarea && contadorCaracteres) {
+        comentarioTextarea.addEventListener('input', function() {
+            const longitud = this.value.length;
+            contadorCaracteres.textContent = `${longitud}/200`;
+            habilitarBotonResena();
+        });
+    }
+}
 
+function actualizarEstrellasRating(rating) {
+    const ratingStars = document.querySelectorAll('.star-input');
+    const ratingValue = document.getElementById('ratingValue');
+    
+    ratingStars.forEach((star) => {
+        const value = parseInt(star.dataset.value);
+        if (value <= rating) {
+            star.classList.add('filled');
+            star.textContent = '★';
+        } else {
+            star.classList.remove('filled');
+            star.textContent = '☆';
+        }
+    });
+    
+    if (ratingValue) {
+        ratingValue.textContent = rating;
+    }
+}
+
+function resaltarEstrellasHover(rating) {
+    const ratingStars = document.querySelectorAll('.star-input');
+    
+    ratingStars.forEach((star) => {
+        const value = parseInt(star.dataset.value);
+        if (value <= rating) {
+            star.style.color = '#ffd700';
+            star.textContent = '★';
+        } else {
+            star.style.color = '';
+            star.textContent = '☆';
+        }
+    });
+}
+
+function habilitarBotonResena() {
+    const comentario = document.getElementById('nuevoComentario')?.value.trim() || '';
+    const boton = document.getElementById('btnAgregarResena');
+    
+    // obtener rating actual
+    let currentRating = 0;
+    const ratingStars = document.querySelectorAll('.star-input');
+    ratingStars.forEach(star => {
+        if (star.classList.contains('filled')) {
+            currentRating = Math.max(currentRating, parseInt(star.dataset.value));
+        }
+    });
+
+    if (boton) {
+        // Activar si hay comentario o si hay rating
+        boton.disabled = !(comentario.length > 0 || currentRating > 0);
+    }
+}
+
+
+// ============================================
+// AGREGAR RESEÑA (MEJORADO)
+// ============================================
+async function agregarResena() {
+    const comentario = document.getElementById('nuevoComentario')?.value.trim() || '';
+    // Obtener rating actual
+    let currentRating = 0;
+    const ratingStars = document.querySelectorAll('.star-input');
+    ratingStars.forEach(star => {
+        if (star.classList.contains('filled')) {
+            currentRating = Math.max(currentRating, parseInt(star.dataset.value));
+        }
+    });
+
+    // Validación: permitir reseña sin rating y rating sin reseña
+    if (!comentario && currentRating === 0) {
+        showToast('Selecciona una calificación o escribe un comentario', 'error');
+        return;
+    }
+
+    const cancionId = currentCancionIdPanel || currentSongId;
+    if (!cancionId) {
+        showToast('Error: No hay canción seleccionada', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/resena/agregar/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                cancion_id: cancionId,
+                comentario: comentario || '', // puede ser vacío
+                rating: currentRating > 0 ? currentRating : null
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message || 'Operación exitosa');
+
+            // Si se publicó reseña, limpiar formulario
+            if (comentario) {
+                const comentarioInput = document.getElementById('nuevoComentario');
+                if (comentarioInput) comentarioInput.value = '';
+            }
+
+            // Resetear rating visual
+            actualizarEstrellasRating(0);
+            document.getElementById('contadorCaracteres').textContent = '0/200';
+            const btnAgregar = document.getElementById('btnAgregarResena');
+            if (btnAgregar) btnAgregar.disabled = true;
+
+            // Recargar reseñas y actualizar promedio
+            await cargarResenas(cancionId);
+            // Actualizar UI de rating inmediatamente con lo que devolvió el backend
+            if (typeof data.promedio !== 'undefined' || typeof data.promedio_rating !== 'undefined') {
+                // algunas vistas devuelven 'promedio' y otras 'promedio_rating'
+                const prom = (typeof data.promedio !== 'undefined') ? data.promedio : data.promedio_rating;
+                const total = data.total_ratings || data.totalRatings || 0;
+                const user_rating = data.user_rating || 0;
+                actualizarUIRating(cancionId, parseFloat(prom), parseInt(total || 0), parseInt(user_rating || 0));
+                
+                // Si el panel está abierto, sincronizamos su valor también
+                const panelRating = document.getElementById('panelRating');
+                if (panelRating) panelRating.textContent = parseFloat(prom).toFixed(1);
+                actualizarEstrellasRating(user_rating || 0);
+                const ratingValue = document.getElementById('ratingValue');
+                if (ratingValue) ratingValue.textContent = user_rating || 0;
+            }
+        } else {
+            showToast(data.message || 'Error al guardar', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+    }
+}
+// ============================================
+// CARGAR RESEÑAS
+// ============================================
+async function cargarResenas(songId) {
+    console.log('📋 Cargando reseñas para canción:', songId);
+    
+    try {
+        const response = await fetch(`/api/resenas/cancion/${songId}/`);
+        const data = await response.json();
+        
+        const lista = document.getElementById('resenasLista');
+        const count = document.getElementById('resenasCount');
+        const promedio = document.getElementById('resenasPromedio');
+        
+        if (!lista || !count) {
+            console.error('❌ No se encontraron elementos de reseñas');
+            return;
+        }
+        
+        if (data.success && data.resenas && data.resenas.length > 0) {
+            count.textContent = `${data.resenas.length} reseña${data.resenas.length > 1 ? 's' : ''}`;
+            
+            if (promedio && data.promedio_rating) {
+                promedio.textContent = `⭐ ${data.promedio_rating.toFixed(1)}`;
+            }
+            
+            // En la función cargarResenas, actualiza el HTML generado:
+            lista.innerHTML = data.resenas.map(resena => `
+                <div class="resena-item">
+                    <div class="resena-header-user">
+                        <div class="resena-usuario">
+                            <div class="resena-avatar">
+                                ${resena.foto_perfil 
+                                    ? `<img src="${resena.foto_perfil}" alt="${resena.nombre}" onerror="this.parentElement.innerHTML='${resena.nombre.charAt(0).toUpperCase()}'">` 
+                                    : `<div class="avatar-placeholder">${resena.nombre.charAt(0).toUpperCase()}</div>`
+                                }
+                            </div>
+                            <div class="resena-user-info">
+                                <div class="resena-user-name">${resena.nombre} ${resena.apellido || ''}</div>
+                                <div class="resena-fecha">${resena.fecha}</div>
+                            </div>
+                        </div>
+                        ${resena.rating ? 
+                            `<div class="resena-rating">
+                                ${'★'.repeat(resena.rating)}${'☆'.repeat(5 - resena.rating)}
+                            </div>` : 
+                            `<div class="resena-rating sin-rating">Sin calificación</div>`
+                        }
+                    </div>
+                    <div class="resena-comentario">${resena.comentario}</div>
+                    <div class="resena-footer">
+                        <div class="resena-reacciones">
+                            <button class="resena-like-btn ${resena.user_liked ? 'liked' : ''}" 
+                                    data-resena-id="${resena.id}"
+                                    data-tipo="like">
+                                <span class="like-icon">${resena.user_liked ? '❤️' : '🤍'}</span>
+                                <span class="reaccion-count">${resena.likes || 0}</span>
+                            </button>
+                            <button class="resena-dislike-btn ${resena.user_disliked ? 'disliked' : ''}" 
+                                    data-resena-id="${resena.id}"
+                                    data-tipo="dislike">
+                                <span class="dislike-icon">${resena.user_disliked ? '💔' : '🖤'}</span>
+                                <span class="reaccion-count">${resena.dislikes || 0}</span>
+                            </button>
+                           ${resena.usuario_id == {{ usuario.usuario_id }} ? 
+                            `<button class="resena-eliminar" data-resena-id="${resena.id}">Eliminar</button>` : 
+                            ''}  
+                    </div>
+                </div>
+            `).join('');
+       
+            // Ocultar mensaje de "sin reseñas"
+            const sinResenas = document.getElementById('sinResenas');
+            if (sinResenas) sinResenas.style.display = 'none';
+            
+            configurarReaccionesResenas();
+            configurarEliminarResenas();
+        } else {
+            count.textContent = '0 reseñas';
+            if (promedio) promedio.textContent = '⭐ 0.0';
+            
+            lista.innerHTML = `
+                <div class="sin-resenas" id="sinResenas">
+                    <div class="sin-resenas-icon">💬</div>
+                    <h3>No hay reseñas aún</h3>
+                    <p>Sé el primero en compartir tu opinión</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error al cargar reseñas:', error);
+        showToast('Error al cargar reseñas', 'error');
+    }
+}
+
+// ============================================
+// CONFIGURAR REACCIONES EN RESEÑAS (LIKE/DISLIKE)
+// ============================================
+function configurarReaccionesResenas() {
+    // Configurar botones de like
+    document.querySelectorAll('.resena-like-btn').forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            const resenaId = this.dataset.resenaId;
+            const tipo = this.dataset.tipo;
+            
+            await reaccionarResena(resenaId, tipo, this);
+        });
+    });
+    
+    // Configurar botones de dislike
+    document.querySelectorAll('.resena-dislike-btn').forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            const resenaId = this.dataset.resenaId;
+            const tipo = this.dataset.tipo;
+            
+            await reaccionarResena(resenaId, tipo, this);
+        });
+    });
+}
+
+// ============================================
+// FUNCIÓN PARA REACCIONAR A RESEÑA
+// ============================================
+async function reaccionarResena(resenaId, tipo, boton) {
+    if (!resenaId) return;
+    
+    const resenaItem = boton.closest('.resena-item');
+    const likeBtn = resenaItem.querySelector('.resena-like-btn');
+    const dislikeBtn = resenaItem.querySelector('.resena-dislike-btn');
+    const likeCount = likeBtn.querySelector('.reaccion-count');
+    const dislikeCount = dislikeBtn.querySelector('.reaccion-count');
+    const likeIcon = likeBtn.querySelector('.like-icon');
+    const dislikeIcon = dislikeBtn.querySelector('.dislike-icon');
+    
+    try {
+        const response = await fetch('/api/resena/like/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({ 
+                resena_id: resenaId,
+                tipo: tipo
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Actualizar contadores
+            if (likeCount) likeCount.textContent = data.likes || 0;
+            if (dislikeCount) dislikeCount.textContent = data.dislikes || 0;
+            
+            // Actualizar estilos según la reacción del usuario
+            if (data.reaccion_usuario === 'like') {
+                likeBtn.classList.add('liked');
+                dislikeBtn.classList.remove('disliked');
+                if (likeIcon) likeIcon.textContent = '❤️';
+                if (dislikeIcon) dislikeIcon.textContent = '🖤';
+                showToast('Like agregado');
+            } else if (data.reaccion_usuario === 'dislike') {
+                likeBtn.classList.remove('liked');
+                dislikeBtn.classList.add('disliked');
+                if (likeIcon) likeIcon.textContent = '🤍';
+                if (dislikeIcon) dislikeIcon.textContent = '💔';
+                showToast('Dislike agregado');
+            } else {
+                likeBtn.classList.remove('liked');
+                dislikeBtn.classList.remove('disliked');
+                if (likeIcon) likeIcon.textContent = '🤍';
+                if (dislikeIcon) dislikeIcon.textContent = '🖤';
+                showToast('Reacción eliminada');
+            }
+        } else {
+            showToast(data.message || 'Error al reaccionar', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+    }
+}
+
+// ============================================
+// CONFIGURAR ELIMINAR RESEÑAS (MANTENER IGUAL)
+// ============================================
+function configurarEliminarResenas() {
+    document.querySelectorAll('.resena-eliminar').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const resenaId = this.dataset.resenaId;
+            
+            if (!resenaId) return;
+            
+            if (!confirm('¿Estás seguro de que quieres eliminar esta reseña?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/resena/eliminar/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({ resena_id: resenaId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Reseña eliminada');
+                    cargarResenas(currentCancionIdPanel || currentSongId);
+                } else {
+                    showToast(data.message || 'Error al eliminar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error al eliminar reseña', 'error');
+            }
+        });
+    });
+}
+// ============================================
+// ACTUALIZAR PROMEDIO DE RESEÑAS
+// ============================================
+function actualizarPromedioResenas() {
+    // Esta función puede ser llamada después de agregar/eliminar reseñas
+    const cancionId = currentCancionIdPanel || currentSongId;
+    if (cancionId) {
+        cargarResenas(cancionId);
+    }
+}
+
+// ============================================
+// SINCRONIZAR PANEL CON REPRODUCTOR
+// ============================================
+function sincronizarPanelConReproductor() {
+    // Escuchar cambios en el reproductor
+    if (audioPlayer) {
+        audioPlayer.addEventListener('play', function() {
+            if (panelReproduccion.classList.contains('active')) {
+                actualizarPanelInfo();
+            }
+        });
+        
+        audioPlayer.addEventListener('pause', function() {
+            if (panelReproduccion.classList.contains('active')) {
+                actualizarPanelInfo();
+            }
+        });
+        
+        audioPlayer.addEventListener('timeupdate', function() {
+            if (panelReproduccion.classList.contains('active')) {
+                actualizarBarraProgresoPanel();
+            }
+        });
+        
+        audioPlayer.addEventListener('ended', function() {
+            if (panelReproduccion.classList.contains('active')) {
+                setTimeout(() => {
+                    actualizarPanelInfo();
+                    cargarResenas(currentSongId);
+                }, 100);
+            }
+        });
+    }
+}
+
+function actualizarUIRating(songId, promedio, total_ratings, user_rating) {
+    // 1) Actualizar el contenedor de rating para la tarjeta principal (si existe)
+    const ratingContainer = document.querySelector(`.rating-container[data-cancion-id="${songId}"]`);
+    if (ratingContainer) {
+        // promedio con 1 decimal
+        const avgSpan = ratingContainer.querySelector('.average-rating');
+        if (avgSpan && typeof promedio === 'number') {
+            avgSpan.textContent = promedio.toFixed(1);
+        }
+
+        // contador total
+        const countSpan = ratingContainer.querySelector('.rating-count');
+        if (countSpan) {
+            countSpan.textContent = `(${total_ratings})`;
+        }
+
+        // actualizar estrellas de promedio (.stars-display .star)
+        const avgStars = ratingContainer.querySelectorAll('.stars-display .star');
+        if (avgStars && typeof promedio === 'number') {
+            const rounded = Math.round(promedio);
+            avgStars.forEach((s, i) => {
+                if (i < rounded) {
+                    s.textContent = '★';
+                    s.classList.add('filled');
+                } else {
+                    s.textContent = '☆';
+                    s.classList.remove('filled');
+                }
+            });
+        }
+    }
+
+    // 2) Actualizar rating del usuario (si hay un bloque rating en tarjeta)
+    // data-current-rating en .rating-stars (si existe)
+    const userStarsContainer = document.querySelector(`.rating-container[data-cancion-id="${songId}"] .rating-stars`);
+    if (userStarsContainer) {
+        userStarsContainer.dataset.currentRating = user_rating || 0;
+        const stars = userStarsContainer.querySelectorAll('.rate-star');
+        stars.forEach(star => {
+            const v = parseInt(star.dataset.value);
+            if (v <= (user_rating || 0)) {
+                star.setAttribute('data-filled', 'true');
+                star.classList.add('filled');
+                star.textContent = '★';
+            } else {
+                star.setAttribute('data-filled', 'false');
+                star.classList.remove('filled');
+                star.textContent = '☆';
+            }
+        });
+    }
+
+    // 3) Actualizar el panel de reproducción si está abierto y corresponde a la canción
+    if ((currentCancionIdPanel || currentSongId) == String(songId)) {
+        // actualizar promedio en el panel
+        const panelRating = document.getElementById('panelRating');
+        if (panelRating && typeof promedio === 'number') panelRating.textContent = promedio.toFixed(1);
+
+        // actualizar estrellas de input en el panel (persistir user_rating)
+        const panelRatingInput = document.getElementById('ratingInput');
+        if (panelRatingInput) {
+            actualizarEstrellasRating(user_rating || 0); // función ya definida en tu script
+            // además actualiza el valor mostrado
+            const ratingValue = document.getElementById('ratingValue');
+            if (ratingValue) ratingValue.textContent = user_rating || 0;
+        }
+    }
+}
 
 
 // ============================================

@@ -12,7 +12,6 @@ class Generos(models.Model):
     def __str__(self):
         return self.nombre
 
-
 class Albumes(models.Model):
     album_id = models.AutoField(primary_key=True)
     titulo = models.CharField(max_length=50, blank=True, null=True)
@@ -26,7 +25,6 @@ class Albumes(models.Model):
 
     def __str__(self):
         return self.titulo
-
 
 class Artistas(models.Model):
     artista_id = models.AutoField(primary_key=True)
@@ -106,9 +104,6 @@ class RatingCancion(models.Model):
     def __str__(self):
         return f"Rating {self.valor} para {self.cancion.titulo}"
     
-
-
-
 class CancionesGeneros(models.Model):
     cancion = models.ForeignKey(Canciones, models.DO_NOTHING, blank=True, null=True, db_column='cancion_id')
     genero = models.ForeignKey(Generos, models.DO_NOTHING, blank=True, null=True, db_column='genero_id')
@@ -116,7 +111,6 @@ class CancionesGeneros(models.Model):
     class Meta:
         managed = False
         db_table = 'canciones_generos'
-
 
 class CancionesArtistas(models.Model):
     tipo_participacion = models.CharField(max_length=11, blank=True, null=True)
@@ -126,7 +120,6 @@ class CancionesArtistas(models.Model):
     class Meta:
         managed = False
         db_table = 'canciones_artistas'
-
 
 class Playlist(models.Model):
     playlist_id = models.AutoField(primary_key=True)
@@ -188,3 +181,29 @@ class ReaccionesCanciones(models.Model):
         managed = False
         db_table = 'reacciones_canciones'
         unique_together = ('usuario_id', 'cancion_id')
+
+class ResenaCanciones(models.Model):
+    resena_cancion_id = models.AutoField(primary_key=True)
+    usuario_id = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id')
+    cancion_id = models.ForeignKey(Canciones, models.DO_NOTHING, db_column='cancion_id')
+    comentario = models.TextField(blank=True, null=True)
+    # permitir NULL para que exista reseña sin calificación
+    puntuacion_estrellas = models.IntegerField(blank=True, null=True)
+    fecha_resena = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'resenas_canciones'
+
+    def __str__(self):
+        return f"Reseña {self.resena_cancion_id} - {self.usuario_id} / {self.cancion_id}"
+
+class ReaccionResena(models.Model):
+    usuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='usuario_id')
+    resena = models.ForeignKey(ResenaCanciones, models.DO_NOTHING, db_column='resena_cancion_id')
+    tipo = models.CharField(max_length=10)   # 'like' o 'dislike'
+
+    class Meta:
+        managed = False
+        db_table = 'reacciones_resenas_canciones'
+        unique_together = (('usuario', 'resena'),)

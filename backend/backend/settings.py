@@ -82,7 +82,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'muuusica',
         'USER': 'root',  # <-- PON TU USUARIO DE MySQL
-        'PASSWORD': '12345',   # <-- PON TU CONTRASEÑA DE MySQL
+        'PASSWORD': 'root123',   # <-- PON TU CONTRASEÑA DE MySQL
         'HOST': '127.0.0.1',
         'PORT': '3306',
     }

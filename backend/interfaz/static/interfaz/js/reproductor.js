@@ -1,11 +1,5 @@
 // ========== REPRODUCTOR GLOBAL PERSISTENTE ==========
 
-// Variables globales
-let currentSongId = null;
-let isPlaying = false;
-let audioPlayer = null;
-let songsList = [];
-
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     audioPlayer = document.getElementById('audioPlayer');

@@ -712,6 +712,7 @@ def mis_favoritos(request):
 
 # ============== FAVORITOS AJAX ==============
 
+
 @csrf_exempt
 def toggle_favorito(request):
     """Agregar o quitar canción de favoritos"""
@@ -1774,3 +1775,387 @@ def reaccionar_cancion(request):
         'success': False,
         'message': 'Método no permitido'
     })   
+
+@csrf_exempt
+def agregar_resena(request):
+    """Agregar reseña a una canción. Permite comentario y/o rating.
+       Devuelve promedio, total_ratings y user_rating actualizados."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+
+    try:
+        data = json.loads(request.body)
+        cancion_id = data.get('cancion_id')
+        comentario = (data.get('comentario') or '').strip()
+        rating_raw = data.get('rating', None)
+        rating = None
+        if rating_raw is not None and rating_raw != '':
+            try:
+                rating = int(rating_raw)
+            except:
+                rating = None
+
+        usuario_id = request.session['usuario_id']
+
+        if not cancion_id:
+            return JsonResponse({'success': False, 'message': 'Falta cancion_id'})
+
+        created_resena = False
+        rating_accion = None
+
+        with connection.cursor() as cursor:
+            # Insertar reseña si viene comentario (puntuacion_estrellas nullable)
+            if comentario:
+                cursor.execute("""
+                    INSERT INTO resenas_canciones (usuario_id, cancion_id, comentario, fecha_resena, puntuacion_estrellas)
+                    VALUES (%s, %s, %s, NOW(), %s)
+                """, [usuario_id, cancion_id, comentario, rating if (rating and rating > 0) else None])
+                created_resena = True
+
+            # Si vino rating -> insertar/actualizar ratings_canciones
+            if rating is not None:
+                if rating < 1 or rating > 5:
+                    return JsonResponse({'success': False, 'message': 'Rating debe estar entre 1 y 5'})
+
+                cursor.execute("""
+                    SELECT rating_id FROM ratings_canciones WHERE usuario_id = %s AND cancion_id = %s
+                """, [usuario_id, cancion_id])
+                r = cursor.fetchone()
+                if r:
+                    cursor.execute("""
+                        UPDATE ratings_canciones SET valor = %s, fecha_rating = NOW()
+                        WHERE usuario_id = %s AND cancion_id = %s
+                    """, [rating, usuario_id, cancion_id])
+                    rating_accion = 'actualizado'
+                else:
+                    cursor.execute("""
+                        INSERT INTO ratings_canciones (usuario_id, cancion_id, valor)
+                        VALUES (%s, %s, %s)
+                    """, [usuario_id, cancion_id, rating])
+                    rating_accion = 'agregado'
+
+            # Si no vino comentario ni rating -> error
+            if not comentario and rating is None:
+                return JsonResponse({'success': False, 'message': 'Envía al menos un comentario o una calificación'})
+
+            # Obtener estadísticas actualizadas del rating
+            cursor.execute("""
+                SELECT COUNT(*) as total_ratings, AVG(valor) as promedio
+                FROM ratings_canciones
+                WHERE cancion_id = %s
+            """, [cancion_id])
+            estad = cursor.fetchone()
+            total_ratings = int(estad[0]) if estad and estad[0] else 0
+            promedio = float(estad[1]) if estad and estad[1] else 0.0
+
+            # Obtener rating actual del usuario (por si no envió rating ahora)
+            cursor.execute("""
+                SELECT valor FROM ratings_canciones
+                WHERE usuario_id = %s AND cancion_id = %s
+            """, [usuario_id, cancion_id])
+            ur = cursor.fetchone()
+            user_rating = int(ur[0]) if ur and ur[0] else 0
+
+        msgs = []
+        if created_resena: msgs.append('Reseña publicada')
+        if rating_accion: msgs.append(f'Rating {rating_accion}')
+        message = ' y '.join(msgs) if msgs else 'Acción realizada'
+
+        return JsonResponse({
+            'success': True,
+            'message': message,
+            'promedio': round(promedio, 1),
+            'total_ratings': total_ratings,
+            'user_rating': user_rating
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def obtener_resenas_cancion(request, cancion_id):
+    """Obtener reseñas + estadísticas (promedio, total, user_rating) de una canción"""
+    usuario_id = request.session.get('usuario_id')
+    resenas = []
+    
+    try:
+        with connection.cursor() as cursor:
+            # Obtener reseñas - MODIFICADO: usa COALESCE para priorizar rating actual
+            cursor.execute("""
+                SELECT 
+                    r.resena_cancion_id AS resena_id,
+                    r.comentario,
+                    -- PRIORIDAD: Si hay rating en reseña, usarlo; si no, usar rating general
+                    COALESCE(r.puntuacion_estrellas, rc.valor) AS rating,
+                    r.fecha_resena,
+                    u.nombre,
+                    u.foto_perfil_path,
+                    u.apellido,
+
+                    -- total likes
+                    SUM(CASE WHEN rr.tipo = 'like' THEN 1 ELSE 0 END) AS total_likes,
+
+                    -- total dislikes
+                    SUM(CASE WHEN rr.tipo = 'dislike' THEN 1 ELSE 0 END) AS total_dislikes,
+
+                    -- user liked?
+                    MAX(CASE WHEN rr.usuario_id = %s AND rr.tipo = 'like' THEN 1 ELSE 0 END) AS user_liked,
+
+                    -- user disliked?
+                    MAX(CASE WHEN rr.usuario_id = %s AND rr.tipo = 'dislike' THEN 1 ELSE 0 END) AS user_disliked,
+
+                    r.usuario_id
+
+                FROM resenas_canciones r
+                JOIN usuarios u 
+                    ON r.usuario_id = u.usuario_id
+
+                LEFT JOIN reacciones_resenas_canciones rr 
+                    ON r.resena_cancion_id = rr.resena_cancion_id
+                    
+                -- NUEVO: LEFT JOIN con ratings_canciones para obtener calificación actual
+                LEFT JOIN ratings_canciones rc 
+                    ON rc.usuario_id = r.usuario_id AND rc.cancion_id = r.cancion_id
+
+                WHERE r.cancion_id = %s
+
+                GROUP BY 
+                    r.resena_cancion_id, 
+                    r.comentario,
+                    r.puntuacion_estrellas,
+                    rc.valor,  -- Agregado al GROUP BY
+                    r.fecha_resena,
+                    u.nombre,
+                    u.apellido,
+                    u.foto_perfil_path,
+                    r.usuario_id
+
+                ORDER BY r.fecha_resena DESC
+            """, [usuario_id, usuario_id, cancion_id])
+            
+            for row in cursor.fetchall():
+                fecha = row[3].strftime('%d/%m/%Y') if row[3] else ''
+                resenas.append({
+                    'id': row[0],
+                    'comentario': row[1],
+                    'rating': row[2],  # Ahora es COALESCE(r.puntuacion_estrellas, rc.valor)
+                    'fecha': fecha,
+                    'nombre': row[4],
+                    'foto_perfil': row[5],
+                    'apellido': row[6],  # Agregado
+                    'likes': row[7],
+                    'dislikes': row[8],
+                    'user_liked': bool(row[9]),
+                    'user_disliked': bool(row[10]),
+                    'usuario_id': row[11],
+                })
+            
+            # Resto del código se mantiene igual...
+            # Estadísticas globales de ratings
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total_ratings,
+                    IFNULL(AVG(valor), 0) as promedio
+                FROM ratings_canciones
+                WHERE cancion_id = %s
+            """, [cancion_id])
+            estad = cursor.fetchone()
+            total_ratings = int(estad[0]) if estad and estad[0] else 0
+            promedio = float(estad[1]) if estad and estad[1] else 0.0
+
+            # Rating específico del usuario (si está logueado)
+            user_rating = 0
+            if usuario_id:
+                cursor.execute("""
+                    SELECT valor FROM ratings_canciones
+                    WHERE cancion_id = %s AND usuario_id = %s
+                """, [cancion_id, usuario_id])
+                ur = cursor.fetchone()
+                if ur and ur[0] is not None:
+                    user_rating = int(ur[0])
+
+        return JsonResponse({
+            'success': True,
+            'resenas': resenas,
+            'promedio_rating': round(promedio, 1),
+            'total_ratings': total_ratings,
+            'user_rating': user_rating
+        })
+        
+    except Exception as e:
+        print(f"Error en obtener_resenas_cancion: {e}")
+        import traceback; traceback.print_exc()
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def like_resena(request): 
+    """Manejar likes/dislikes de reseñas"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        resena_id = data.get('resena_id')
+        tipo = data.get('tipo')  # 'like' o 'dislike'
+        
+        if tipo not in ['like', 'dislike']:
+            return JsonResponse({'success': False, 'message': 'Tipo inválido'})
+        
+        usuario_id = request.session['usuario_id']
+        
+        with connection.cursor() as cursor:
+            # Verificar si ya existe una reacción del usuario a esta reseña
+            cursor.execute("""
+                SELECT tipo FROM reacciones_resenas_canciones 
+                WHERE usuario_id = %s AND resena_cancion_id = %s
+            """, [usuario_id, resena_id])
+            
+            reaccion_existente = cursor.fetchone()
+            
+            if reaccion_existente:
+                tipo_actual = reaccion_existente[0]
+                
+                if tipo_actual == tipo:
+                    # Si es la misma reacción, eliminarla (toggle off)
+                    cursor.execute("""
+                        DELETE FROM reacciones_resenas_canciones 
+                        WHERE usuario_id = %s AND resena_cancion_id = %s
+                    """, [usuario_id, resena_id])
+                    accion = 'eliminada'
+                else:
+                    # Si es diferente, actualizarla (cambiar de like a dislike o viceversa)
+                    cursor.execute("""
+                        UPDATE reacciones_resenas_canciones 
+                        SET tipo = %s 
+                        WHERE usuario_id = %s AND resena_cancion_id = %s
+                    """, [tipo, usuario_id, resena_id])
+                    accion = 'cambiada'
+            else:
+                # Crear nueva reacción
+                cursor.execute("""
+                    INSERT INTO reacciones_resenas_canciones (usuario_id, resena_cancion_id, tipo)
+                    VALUES (%s, %s, %s)
+                """, [usuario_id, resena_id, tipo])
+                accion = 'agregada'
+            
+            # Obtener contadores actualizados
+            cursor.execute("""
+                SELECT 
+                    SUM(CASE WHEN tipo = 'like' THEN 1 ELSE 0 END) as likes,
+                    SUM(CASE WHEN tipo = 'dislike' THEN 1 ELSE 0 END) as dislikes
+                FROM reacciones_resenas_canciones
+                WHERE resena_cancion_id = %s
+            """, [resena_id])
+            
+            contadores = cursor.fetchone()
+            likes = contadores[0] if contadores[0] else 0
+            dislikes = contadores[1] if contadores[1] else 0
+            
+            # Verificar reacción actual del usuario
+            cursor.execute("""
+                SELECT tipo FROM reacciones_resenas_canciones 
+                WHERE usuario_id = %s AND resena_cancion_id = %s
+            """, [usuario_id, resena_id])
+            
+            reaccion_actual = cursor.fetchone()
+            reaccion_usuario = reaccion_actual[0] if reaccion_actual else None
+            
+            return JsonResponse({
+                'success': True,
+                'accion': accion,
+                'likes': likes,
+                'dislikes': dislikes,
+                'reaccion_usuario': reaccion_usuario,
+                'message': f'Reacción {accion} exitosamente'
+            })
+            
+    except Exception as e:
+        print(f"Error en like_resena: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'message': str(e)})
+    
+@csrf_exempt
+def eliminar_resena(request):
+    """Eliminar una reseña (solo el dueño o admin)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        resena_id = data.get('resena_id')
+        usuario_id = request.session['usuario_id']
+        
+        if not resena_id:
+            return JsonResponse({'success': False, 'message': 'Falta resena_id'})
+        
+        with connection.cursor() as cursor:
+            # Verificar que la reseña exista y que el usuario sea el dueño
+            cursor.execute("""
+                SELECT usuario_id FROM resenas_canciones 
+                WHERE resena_cancion_id = %s
+            """, [resena_id])
+            
+            resena = cursor.fetchone()
+            
+            if not resena:
+                return JsonResponse({'success': False, 'message': 'Reseña no encontrada'})
+            
+            resena_usuario_id = resena[0]
+            
+            # Verificar si el usuario es el dueño o es admin
+            cursor.execute("""
+                SELECT es_admin FROM usuarios WHERE usuario_id = %s
+            """, [usuario_id])
+            
+            usuario = cursor.fetchone()
+            es_admin = usuario[0] if usuario else False
+            
+            if resena_usuario_id != usuario_id and not es_admin:
+                return JsonResponse({'success': False, 'message': 'No tienes permiso para eliminar esta reseña'})
+            
+            # Eliminar reacciones asociadas primero (por integridad referencial)
+            cursor.execute("""
+                DELETE FROM reacciones_resenas_canciones 
+                WHERE resena_cancion_id = %s
+            """, [resena_id])
+            
+            # Eliminar la reseña
+            cursor.execute("""
+                DELETE FROM resenas_canciones 
+                WHERE resena_cancion_id = %s
+            """, [resena_id])
+            
+            # Si esta reseña tenía una calificación en puntuacion_estrellas, eliminarla de ratings_canciones también
+            # (opcional, dependiendo de si quieres mantener el rating separado)
+            # cursor.execute("""
+            #     DELETE FROM ratings_canciones 
+            #     WHERE usuario_id = %s AND cancion_id = (
+            #         SELECT cancion_id FROM resenas_canciones 
+            #         WHERE resena_cancion_id = %s
+            #     )
+            # """, [usuario_id, resena_id])
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Reseña eliminada exitosamente'
+            })
+            
+    except Exception as e:
+        print(f"Error en eliminar_resena: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'message': str(e)})
