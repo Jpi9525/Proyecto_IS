@@ -6,8 +6,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import JsonResponse
 from django.db import connection
-from django.core.files.storage import FileSystemStorage
-from .models import Usuario, Generos, Canciones, RedesSociales
+from .models import Usuario, Generos  # Asegúrate de importar ambos
 import json
 import random
 
@@ -291,16 +290,8 @@ def guardar_generos(request):
 
 def lista_reproduccion(request):
     """Vista para mostrar las canciones reales de la BD"""
-    # 1. RECUPERAR USUARIO (Para la foto del header)
-    uid = request.session.get('usuario_id')
-    if not uid: return redirect('login')
-
-    try:
-        usuario_actual = Usuario.objects.get(usuario_id=uid)
-    except Usuario.DoesNotExist:
-        return redirect('login')
-
     generos_seleccionados = request.session.get('generos_favoritos', [])
+    
     if not generos_seleccionados or len(generos_seleccionados) != 3:
         messages.warning(request, 'Primero debes seleccionar 3 géneros musicales')
         return redirect('home')
@@ -364,8 +355,7 @@ def lista_reproduccion(request):
     context = {
         'canciones': todas_las_canciones,
         'generos_seleccionados': generos_seleccionados,
-        'total_canciones': len(todas_las_canciones),
-        'usuario': usuario_actual
+        'total_canciones': len(todas_las_canciones)
     }
     
     return render(request, 'interfaz/lista_reproduccion.html', context)
@@ -1206,149 +1196,227 @@ def verificar_descarga(request):
             
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
-        
-         
-def perfil_usuario(request):
-    # 1. Seguridad: Verificar sesión
-    uid = request.session.get('usuario_id')
-    if not uid:
-        return redirect('login')
+@csrf_exempt
+def actualizar_portada_playlist(request):
+    """Actualizar la imagen de portada de una playlist"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
     
-    usuario = Usuario.objects.get(usuario_id=uid)
-
-    # 2. Obtener redes sociales
-    redes = RedesSociales.objects.filter(usuario_id=uid)
-
-    # 3. Lógica del autoplay (buscar la canción elegida)
-    cancion_anthem = None
-    if usuario.cancion_id:
-        try:
-            cancion_anthem = Canciones.objects.get(cancion_id=usuario.cancion_id)
-        except Canciones.DoesNotExist:
-            pass
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
     
-    # 4. Obtener canciones publicadas
-    mis_canciones = Canciones.objects.all()[:4]
-
-    context = {
-        'usuario' : usuario,
-        'redes' : redes, 
-        'cancion_anthem' : cancion_anthem,
-        'mis_canciones' : mis_canciones,
-        'todas_canciones' : Canciones.objects.all()
-    }
-
-    return render(request, 'interfaz/perfil.html', context)
-
-def editar_perfil(request):
-    # Verificar sesión
-    uid = request.session.get('usuario_id')
-    if not uid: return redirect('login')
-
-    usuario = Usuario.objects.get(usuario_id=uid)
-
-    if request.method == 'POST':
-        print("--- INICIANDO ACTUALIZACIÓN POR SQL ---")
-        # Editar Nombre
-        nuevo_nombre = request.POST.get('nombre')
-        nuevo_apellido = request.POST.get('apellido')
-        nueva_bio = request.POST.get('descripcion', '')
-        cancion_id = request.POST.get('cancion_anthem_id')
-
-        # Manejo de Foto
-        borrar_foto = request.POST.get('eliminar_foto')
-        ruta_foto = usuario.foto_perfil_path
-        if borrar_foto:
-            # Si marcaron borrar, la ruta se vuelve None (o string vacío)
-            ruta_foto = None 
-            print(">>> Se solicitó eliminar la foto de perfil")
-        elif 'foto_perfil' in request.FILES and request.FILES['foto_perfil']:
-            # Si NO borraron y SUBIERON una nueva, la guardamos
-            imagen = request.FILES['foto_perfil']
-            fs = FileSystemStorage()
-            filename = fs.save(f"perfiles/user_{uid}_{imagen.name}", imagen)
-            ruta_foto = fs.url(filename)
-
-        # Validamos canción (si está vacía, ponemos NULL o 0)
-        if not cancion_id:
-            cancion_id = None
-
-        # SQL directo
-        try:
-            with connection.cursor() as cursor:
-                sql = """
-                    UPDATE usuarios 
-                    SET nombre = %s, 
-                        apellido = %s, 
-                        descripcion = %s, 
-                        cancion_id = %s, 
-                        foto_perfil_path = %s
-                    WHERE usuario_id = %s
-                """
-                valores = [nuevo_nombre, nuevo_apellido, nueva_bio, cancion_id, ruta_foto, uid]
-                cursor.execute(sql, valores)
-                print(f"SQL Ejecutado correctamente. Filas afectadas: {cursor.rowcount}")
-        except Exception as e:
-            print(f"ERROR SQL: {e}")
-
-        nueva_red = request.POST.get('nueva_red_nombre')
-        nueva_url = request.POST.get('nueva_red_url')
-
-        if nueva_red and nueva_url:
-            RedesSociales.objects.create(
-                usuario_id=uid,
-                nombre_red=nueva_red,
-                url=nueva_url
-            )
-
-        return redirect('perfil_usuario')
-
-    return redirect('perfil_usuario')
-
-def eliminar_red_social(request, red_id):
-    # 1. Seguridad básica
-    uid = request.session.get('usuario_id')
-    if not uid: return redirect('login')
-
-    print(f"\n🛑 --- INICIO DIAGNÓSTICO DE BORRADO ---")
-    print(f"Intentando borrar ID: {red_id} | Usuario actual: {uid}")
-
+    usuario_id = request.session['usuario_id']
+    
     try:
+        playlist_id = request.POST.get('playlist_id')
+        
+        # Verificar que la playlist pertenece al usuario
         with connection.cursor() as cursor:
-            # PASO 1: ¿CÓMO SE LLAMAN LAS COLUMNAS?
-            # Le preguntamos a la base de datos qué columnas tiene la tabla
-            cursor.execute("DESCRIBE redes_sociales")
-            columnas = [col[0] for col in cursor.fetchall()]
-            print(f"📋 Las columnas en la BD son: {columnas}")
-
-            # PASO 2: INTENTAR BORRAR SEGÚN EL NOMBRE QUE ENCONTREMOS
-            filas_borradas = 0
+            cursor.execute("""
+                SELECT nombre FROM playlists 
+                WHERE playlist_id = %s AND usuario_id = %s
+            """, [playlist_id, usuario_id])
             
-            if 'id' in columnas:
-                print("👉 Detecté columna 'id'. Usando esa...")
-                # Probamos borrando solo por ID primero para ver si es el usuario lo que falla
-                cursor.execute("DELETE FROM redes_sociales WHERE id = %s", [red_id])
-                filas_borradas = cursor.rowcount
-                
-            elif 'red_id' in columnas:
-                print("👉 Detecté columna 'red_id'. Usando esa...")
-                cursor.execute("DELETE FROM redes_sociales WHERE red_id = %s", [red_id])
-                filas_borradas = cursor.rowcount
+            if not cursor.fetchone():
+                return JsonResponse({'success': False, 'message': 'Playlist no encontrada'})
+        
+        # Verificar si se subió una imagen
+        if 'imagen' in request.FILES:
+            imagen = request.FILES['imagen']
             
-            else:
-                # Si se llama de otra forma rara (ej: 'red_social_id')
-                nombre_id = columnas[0] # Asumimos que la primera es la PK
-                print(f"👉 Usando la primera columna encontrada: '{nombre_id}'")
-                cursor.execute(f"DELETE FROM redes_sociales WHERE {nombre_id} = %s", [red_id])
-                filas_borradas = cursor.rowcount
-
-            if filas_borradas > 0:
-                print(f"✅ ¡ÉXITO! Se borraron {filas_borradas} filas.")
-            else:
-                print("⚠️ FRACASO: La consulta corrió pero no borró nada. El ID no existía.")
-
+            # Validar tipo de archivo
+            allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+            if imagen.content_type not in allowed_types:
+                return JsonResponse({'success': False, 'message': 'Tipo de archivo no permitido. Usa JPG, PNG, GIF o WEBP'})
+            
+            # Validar tamaño (máximo 5MB)
+            if imagen.size > 5 * 1024 * 1024:
+                return JsonResponse({'success': False, 'message': 'La imagen es muy grande (máx. 5MB)'})
+            
+            # Crear directorio si no existe
+            import os
+            from django.conf import settings
+            
+            upload_dir = os.path.join(settings.BASE_DIR, 'interfaz', 'static', 'interfaz', 'imagenes', 'playlists')
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            # Generar nombre único
+            import time
+            ext = imagen.name.split('.')[-1].lower()
+            filename = f"playlist_{playlist_id}_{int(time.time())}.{ext}"
+            filepath = os.path.join(upload_dir, filename)
+            
+            # Guardar archivo
+            with open(filepath, 'wb+') as destination:
+                for chunk in imagen.chunks():
+                    destination.write(chunk)
+            
+            # Ruta para guardar en BD
+            imagen_path = f"/static/interfaz/imagenes/playlists/{filename}"
+            
+        elif 'imagen_predeterminada' in request.POST:
+            # Usar imagen predeterminada seleccionada
+            imagen_path = request.POST.get('imagen_predeterminada')
+        else:
+            return JsonResponse({'success': False, 'message': 'No se proporcionó imagen'})
+        
+        # Actualizar en BD
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE playlists 
+                SET imagen_portada = %s 
+                WHERE playlist_id = %s AND usuario_id = %s
+            """, [imagen_path, playlist_id, usuario_id])
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Portada actualizada correctamente',
+            'nueva_portada': imagen_path
+        })
+        
     except Exception as e:
-        print(f"❌ ERROR EXPLÍCITO: {e}")
+        print(f"Error al actualizar portada: {e}")
+        return JsonResponse({'success': False, 'message': str(e)})
 
-    print("🛑 --- FIN DIAGNÓSTICO ---\n")
-    return redirect('perfil_usuario')
+
+@csrf_exempt
+def toggle_visibilidad_playlist(request):
+    """Cambiar visibilidad de playlist (pública/privada)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        playlist_id = data.get('playlist_id')
+        usuario_id = request.session['usuario_id']
+        
+        with connection.cursor() as cursor:
+            # Obtener estado actual
+            cursor.execute("""
+                SELECT es_publica, nombre FROM playlists 
+                WHERE playlist_id = %s AND usuario_id = %s
+            """, [playlist_id, usuario_id])
+            
+            resultado = cursor.fetchone()
+            if not resultado:
+                return JsonResponse({'success': False, 'message': 'Playlist no encontrada'})
+            
+            estado_actual = resultado[0]
+            nombre_playlist = resultado[1]
+            
+            # Toggle: si es 1 pasa a 0, si es 0 pasa a 1
+            nuevo_estado = 0 if estado_actual == 1 else 1
+            
+            cursor.execute("""
+                UPDATE playlists 
+                SET es_publica = %s 
+                WHERE playlist_id = %s AND usuario_id = %s
+            """, [nuevo_estado, playlist_id, usuario_id])
+        
+        return JsonResponse({
+            'success': True,
+            'es_publica': nuevo_estado == 1,
+            'message': f'"{nombre_playlist}" ahora es {"pública 🌐" if nuevo_estado == 1 else "privada 🔒"}'
+        })
+        
+    except Exception as e:
+        print(f"Error al cambiar visibilidad: {e}")
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def renombrar_playlist(request):
+    """Cambiar nombre de una playlist"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        playlist_id = data.get('playlist_id')
+        nuevo_nombre = data.get('nombre', '').strip()
+        usuario_id = request.session['usuario_id']
+        
+        if not nuevo_nombre:
+            return JsonResponse({'success': False, 'message': 'El nombre no puede estar vacío'})
+        
+        if len(nuevo_nombre) > 30:
+            return JsonResponse({'success': False, 'message': 'El nombre es muy largo (máx. 30 caracteres)'})
+        
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE playlists 
+                SET nombre = %s 
+                WHERE playlist_id = %s AND usuario_id = %s
+            """, [nuevo_nombre, playlist_id, usuario_id])
+            
+            if cursor.rowcount == 0:
+                return JsonResponse({'success': False, 'message': 'Playlist no encontrada'})
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Nombre actualizado correctamente',
+            'nuevo_nombre': nuevo_nombre
+        })
+        
+    except Exception as e:
+        print(f"Error al renombrar: {e}")
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@csrf_exempt
+def eliminar_playlist(request):
+    """Eliminar una playlist"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    
+    if 'usuario_id' not in request.session:
+        return JsonResponse({'success': False, 'message': 'Debes iniciar sesión'})
+    
+    try:
+        data = json.loads(request.body)
+        playlist_id = data.get('playlist_id')
+        usuario_id = request.session['usuario_id']
+        
+        with connection.cursor() as cursor:
+            # Verificar propiedad y obtener nombre
+            cursor.execute("""
+                SELECT nombre FROM playlists 
+                WHERE playlist_id = %s AND usuario_id = %s
+            """, [playlist_id, usuario_id])
+            
+            resultado = cursor.fetchone()
+            if not resultado:
+                return JsonResponse({'success': False, 'message': 'Playlist no encontrada'})
+            
+            nombre_playlist = resultado[0]
+            
+            # Eliminar canciones de la playlist primero (integridad referencial)
+            cursor.execute("""
+                DELETE FROM playlists_canciones WHERE playlist_id = %s
+            """, [playlist_id])
+            
+            # Eliminar de descargas offline si existe
+            cursor.execute("""
+                DELETE FROM descargas_offline WHERE playlist_id = %s
+            """, [playlist_id])
+            
+            # Eliminar la playlist
+            cursor.execute("""
+                DELETE FROM playlists WHERE playlist_id = %s AND usuario_id = %s
+            """, [playlist_id, usuario_id])
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Playlist "{nombre_playlist}" eliminada correctamente',
+            'redirect': True
+        })
+        
+    except Exception as e:
+        print(f"Error al eliminar: {e}")
+        return JsonResponse({'success': False, 'message': str(e)})

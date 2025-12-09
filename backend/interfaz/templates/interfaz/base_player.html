@@ -1,0 +1,578 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title id="pageTitle">{% block title %}MuuuSica{% endblock %}</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --bg-card: #282828;
+            --bg-card-hover: #3a3a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --accent-pink: #ff1493;
+            --accent-pink-hover: #ff69b4;
+            --player-height: 90px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .app-container {
+            min-height: 100vh;
+            padding-bottom: var(--player-height);
+        }
+        
+        #spaContent {
+            min-height: calc(100vh - var(--player-height));
+            position: relative;
+        }
+        
+        .spa-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: var(--player-height);
+            background: rgba(18, 18, 18, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .spa-loading.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .spa-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent-pink);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .global-player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--player-height);
+            background: linear-gradient(to right, #181818, #282828);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+        }
+        
+        .player-now-playing {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            gap: 15px;
+            min-width: 180px;
+        }
+        .player-cover {
+            width: 56px;
+            height: 56px;
+            background: #404040;
+            border-radius: 6px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .player-cover img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        .player-cover-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--accent-pink), #8b5cf6);
+            font-size: 24px;
+        }
+        .player-song-info {
+            overflow: hidden;
+        }
+        .player-song-title {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+        .player-song-artist {
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+        .player-like-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            transition: all 0.3s;
+        }
+        .player-like-btn:hover { color: var(--accent-pink); transform: scale(1.1); }
+        .player-like-btn.liked { color: var(--accent-pink); }
+        
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 2;
+            gap: 8px;
+        }
+        .player-buttons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .player-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px;
+            transition: all 0.3s;
+            border-radius: 50%;
+        }
+        .player-btn:hover { 
+            color: white; 
+            transform: scale(1.1); 
+        }
+        .player-btn.active { color: var(--accent-pink); }
+        .player-btn-main {
+            width: 40px;
+            height: 40px;
+            background: white;
+            color: black;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .player-btn-main:hover { 
+            transform: scale(1.08); 
+            background: var(--accent-pink);
+            color: white;
+        }
+        
+        .player-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .player-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            min-width: 40px;
+            text-align: center;
+        }
+        .player-progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+        .player-progress-bar:hover { height: 6px; }
+        .player-progress-fill {
+            height: 100%;
+            background: var(--accent-pink);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .player-extras {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex: 1;
+            gap: 15px;
+            min-width: 180px;
+        }
+        .player-volume {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .player-volume-bar {
+            width: 100px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            cursor: pointer;
+        }
+        .player-volume-fill {
+            height: 100%;
+            width: 70%;
+            background: var(--accent-pink);
+            border-radius: 2px;
+            transition: width 0.1s;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: calc(var(--player-height) + 20px);
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .toast.success { border-left: 4px solid #00c853; }
+        .toast.error { border-left: 4px solid #ff4444; }
+        
+        @media (max-width: 768px) {
+            .global-player { padding: 0 10px; }
+            .player-song-title, .player-song-artist { max-width: 120px; }
+            .player-extras { min-width: auto; }
+            .player-volume-bar { width: 60px; }
+        }
+        @media (max-width: 480px) {
+            .player-song-info { display: none; }
+            .player-extras { display: none; }
+            .player-buttons { gap: 10px; }
+            .player-progress { max-width: 200px; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <div id="spaContent">
+            {% block content %}{% endblock %}
+        </div>
+        
+        <div class="spa-loading" id="spaLoading">
+            <div class="spa-spinner"></div>
+        </div>
+    </div>
+    
+    <div class="global-player" id="globalPlayer">
+        <div class="player-now-playing">
+            <div class="player-cover" id="gPlayerCover">
+                <div class="player-cover-placeholder">🎵</div>
+            </div>
+            <div class="player-song-info">
+                <div class="player-song-title" id="gPlayerTitle">Ninguna canción</div>
+                <div class="player-song-artist" id="gPlayerArtist">Selecciona una canción</div>
+            </div>
+            <button class="player-like-btn" id="gPlayerLikeBtn" title="Favorito">🤍</button>
+        </div>
+        
+        <div class="player-controls">
+            <div class="player-buttons">
+                <button class="player-btn" id="gShuffleBtn" title="Aleatorio">🔀</button>
+                <button class="player-btn" id="gPrevBtn" title="Anterior">⏮</button>
+                <button class="player-btn player-btn-main" id="gPlayPauseBtn" title="Reproducir">▶</button>
+                <button class="player-btn" id="gNextBtn" title="Siguiente">⏭</button>
+                <button class="player-btn" id="gRepeatBtn" title="Repetir">🔁</button>
+            </div>
+            <div class="player-progress">
+                <span class="player-time" id="gCurrentTime">0:00</span>
+                <div class="player-progress-bar" id="gProgressBar">
+                    <div class="player-progress-fill" id="gProgressFill"></div>
+                </div>
+                <span class="player-time" id="gTotalTime">0:00</span>
+            </div>
+        </div>
+        
+        <div class="player-extras">
+            <div class="player-volume">
+                <button class="player-btn" id="gVolumeBtn">🔊</button>
+                <div class="player-volume-bar" id="gVolumeBar">
+                    <div class="player-volume-fill" id="gVolumeFill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <audio id="gAudioPlayer"></audio>
+    <div class="toast" id="toast"></div>
+    
+    <script src="{% static 'interfaz/js/global_player.js' %}"></script>
+    
+    <script>
+    (function() {
+        var spaContent = document.getElementById('spaContent');
+        var spaLoading = document.getElementById('spaLoading');
+        var scriptCounter = 0;
+        
+        function esURLInterna(url) {
+            try {
+                var urlObj = new URL(url, window.location.origin);
+                return urlObj.origin === window.location.origin && 
+                       url.indexOf('/admin/') === -1 && 
+                       url.indexOf('/static/') === -1 &&
+                       url.indexOf('/media/') === -1 &&
+                       url.indexOf('.js') === -1 &&
+                       url.indexOf('.css') === -1 &&
+                       url.indexOf('.png') === -1 &&
+                       url.indexOf('.jpg') === -1;
+            } catch(e) {
+                return false;
+            }
+        }
+        
+        function mostrarLoading() {
+            spaLoading.classList.add('active');
+        }
+        
+        function ocultarLoading() {
+            spaLoading.classList.remove('active');
+        }
+        
+        function limpiarScriptsAnteriores() {
+            document.querySelectorAll('script[data-spa-script]').forEach(function(s) {
+                s.remove();
+            });
+        }
+        
+        function ejecutarScript(codigo) {
+            scriptCounter++;
+            var script = document.createElement('script');
+            script.setAttribute('data-spa-script', 'true');
+            script.id = 'spa-script-' + scriptCounter;
+            
+            // Convertir let/const a var y envolver en IIFE
+            var codigoLimpio = codigo
+                .replace(/\blet\s+/g, 'var ')
+                .replace(/\bconst\s+/g, 'var ');
+            
+            script.textContent = '(function(){try{' + codigoLimpio + '}catch(e){console.error("Error SPA script:",e);}})();';
+            document.body.appendChild(script);
+        }
+        
+        async function cargarPagina(url, pushState) {
+            if (pushState === undefined) pushState = true;
+            mostrarLoading();
+            
+            try {
+                var response = await fetch(url, {
+                    headers: { 'X-SPA-Request': 'true' }
+                });
+                
+                if (!response.ok) throw new Error('Error al cargar');
+                
+                var html = await response.text();
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                
+                var nuevoContenido = doc.getElementById('spaContent');
+                if (!nuevoContenido) {
+                    nuevoContenido = doc.querySelector('.app-container') || doc.body;
+                }
+                
+                // Limpiar scripts anteriores
+                limpiarScriptsAnteriores();
+                
+                // Actualizar contenido SIN los scripts
+                var contenidoHTML = nuevoContenido.innerHTML;
+                var tempDiv = document.createElement('div');
+                tempDiv.innerHTML = contenidoHTML;
+                
+                // Extraer scripts antes de insertar
+                var scripts = [];
+
+                // 1) Scripts que vienen dentro de #spaContent
+                tempDiv.querySelectorAll('script').forEach(function(s) {
+                    if (!s.src || s.src.indexOf('global_player') === -1) {
+                        scripts.push(s.textContent);
+                    }
+                    s.remove();
+                });
+
+                // 2) Scripts de la página que están fuera de #spaContent
+                //    y estén marcados con data-page-script (ej: bloque extra_js)
+                doc.querySelectorAll('script[data-page-script]').forEach(function(s) {
+                    if (!s.src || s.src.indexOf('global_player') === -1) {
+                        scripts.push(s.textContent);
+                    }
+                });
+                
+                // Insertar contenido limpio
+                spaContent.innerHTML = tempDiv.innerHTML;
+                
+                // Actualizar título
+                var nuevoTitulo = doc.querySelector('title');
+                if (nuevoTitulo) {
+                    document.title = nuevoTitulo.textContent;
+                }
+                
+                // Extraer y aplicar estilos
+                var existingStyles = document.getElementById('pageStyles');
+                if (existingStyles) existingStyles.remove();
+                
+                var styles = doc.querySelectorAll('style');
+                if (styles.length > 0) {
+                    var pageStyles = document.createElement('style');
+                    pageStyles.id = 'pageStyles';
+                    styles.forEach(function(style) {
+                        pageStyles.textContent += style.textContent;
+                    });
+                    document.head.appendChild(pageStyles);
+                }
+                
+                // Actualizar URL
+                if (pushState) {
+                    history.pushState({ url: url }, '', url);
+                }
+                
+                // Scroll al inicio
+                window.scrollTo(0, 0);
+                
+                // Actualizar lista de canciones del reproductor
+                if (typeof cargarCancionesEnLista === 'function') {
+                    cargarCancionesEnLista();
+                }
+                
+                // Marcar canción activa
+                if (typeof currentSongId !== 'undefined' && currentSongId && typeof marcarCancionActiva === 'function') {
+                    marcarCancionActiva(currentSongId);
+                }
+                
+                // Ejecutar scripts de la página DESPUÉS de insertar el contenido
+                setTimeout(function() {
+                    scripts.forEach(function(codigo) {
+                        if (codigo.trim()) {
+                            ejecutarScript(codigo);
+                        }
+                    });
+                    
+                    // Vincular clicks en canciones
+                    vincularEventosCanciones();
+                    
+                    console.log('📄 Página cargada via SPA:', url);
+                }, 50);
+                
+            } catch (error) {
+                console.error('Error SPA:', error);
+                window.location.href = url;
+            } finally {
+                ocultarLoading();
+            }
+        }
+        
+        function vincularEventosCanciones() {
+            // Vincular clicks en elementos de canciones
+            document.querySelectorAll('.song-row, .song-card').forEach(function(el) {
+                if (el.dataset.spaVinculado) return;
+                el.dataset.spaVinculado = 'true';
+                
+                el.addEventListener('click', function(e) {
+                    // Ignorar clicks en botones y controles
+                    if (e.target.closest('button, .control-btn, .remove-btn, .menu-btn, .dropdown-menu, .rating, .star, a')) {
+                        return;
+                    }
+                    
+                    var songId = this.dataset.id;
+                    if (songId && typeof reproducirCancion === 'function') {
+                        reproducirCancion(songId);
+                    }
+                });
+            });
+            
+            // Vincular clicks en play overlays
+            document.querySelectorAll('.play-overlay, .play-icon').forEach(function(el) {
+                if (el.dataset.spaVinculado) return;
+                el.dataset.spaVinculado = 'true';
+                
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var card = this.closest('[data-id]');
+                    if (card && typeof reproducirCancion === 'function') {
+                        reproducirCancion(card.dataset.id);
+                    }
+                });
+            });
+        }
+        
+        // Interceptar clicks en links
+        document.addEventListener('click', function(e) {
+            var link = e.target.closest('a');
+            if (!link) return;
+            
+            var href = link.getAttribute('href');
+            
+            if (!href || 
+                href.indexOf('#') === 0 || 
+                href.indexOf('javascript:') === 0 ||
+                href.indexOf('mailto:') === 0 ||
+                href.indexOf('tel:') === 0 ||
+                link.target === '_blank' ||
+                link.hasAttribute('download') ||
+                !esURLInterna(href)) {
+                return;
+            }
+            
+            e.preventDefault();
+            cargarPagina(href);
+        });
+        
+        // Manejar navegación del navegador
+        window.addEventListener('popstate', function(e) {
+            if (e.state && e.state.url) {
+                cargarPagina(e.state.url, false);
+            } else {
+                cargarPagina(window.location.href, false);
+            }
+        });
+        
+        // Estado inicial
+        history.replaceState({ url: window.location.href }, '', window.location.href);
+        
+        // Vincular eventos en la carga inicial
+        setTimeout(vincularEventosCanciones, 100);
+        
+        // Exponer globalmente
+        window.navegarSPA = cargarPagina;
+        window.vincularEventosCanciones = vincularEventosCanciones;
+        
+        console.log('🚀 Sistema SPA inicializado');
+    })();
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

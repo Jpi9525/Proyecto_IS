@@ -1,9 +1,6 @@
 from django.urls import path
 from . import views
 
-from django.conf import settings
-from django.conf.urls.static import static
-
 urlpatterns = [
     # Autenticación
     path('', views.login_view, name='login'),
@@ -16,16 +13,6 @@ urlpatterns = [
     path('home/', views.seleccionar_generos, name='home'),
     path('guardar-generos/', views.guardar_generos, name='guardar_generos'),
     path('lista-reproduccion/', views.lista_reproduccion, name='lista_reproduccion'),
-
-    # Perfil
-    path('perfil/', views.perfil_usuario, name='perfil_usuario'),
-    path('perfil/editar/', views.editar_perfil, name='editar_perfil'),
-
-    # Géneros
-    path('generos/', views.seleccionar_generos, name='seleccionar_generos'),
-
-    # Redes Sociales
-    path('perfil/eliminar-red/<int:red_id>/', views.eliminar_red_social, name='eliminar_red_social'),
     
     # === AGREGAR ESTAS RUTAS ===
     # Álbumes
@@ -53,9 +40,8 @@ urlpatterns = [
     path('api/descargar/album/', views.descargar_album, name='descargar_album'),
     path('api/descargar/playlist/', views.descargar_playlist, name='descargar_playlist'),
     path('api/verificar-descarga/', views.verificar_descarga, name='verificar_descarga'),
-
+    path('api/playlist/actualizar-portada/', views.actualizar_portada_playlist, name='actualizar_portada_playlist'),
+    path('api/playlist/toggle-visibilidad/', views.toggle_visibilidad_playlist, name='toggle_visibilidad_playlist'),
+    path('api/playlist/renombrar/', views.renombrar_playlist, name='renombrar_playlist'),
+    path('api/playlist/eliminar/', views.eliminar_playlist, name='eliminar_playlist'),
 ]
-
-# Esto permite que Django sirva las fotos subidas (solo en modo DEBUG)
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
