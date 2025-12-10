@@ -1,0 +1,7 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer depure codigo
+• ¿Qué haré hoy?
+Hoy juntare los códigos y hare el review y el retrospective
+• Impedimentos detectados
+No se pudo mergear correctamente las cosas
