@@ -1,0 +1,7 @@
+> ¿Qué hice ayer?
+  A: Estuve agregando ciertos featuring a la pestaña de perfil.
+     Debuggeando para que quedará con lo realizado por mis compañeros.
+> ¿Qué haré hoy?
+  A: Continuar juntando el trabajo para que el flujo quede de manera correcta.
+> Impedimentos detectados:
+  - Se mergea de manera incorrecta y provoca que los archivos terminan siendo Frankenstein.
