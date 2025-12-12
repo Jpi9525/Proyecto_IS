@@ -1,0 +1,7 @@
+Daily:
+• ¿Qué hice ayer?
+	Me dormi, el dia de ayer y no pude asistir al sprint  
+• ¿Qué haré hoy?
+	Estaré ayudando con la planeación del siguiente sprint 
+• Impedimentos detectados
+	Ninguno aun
