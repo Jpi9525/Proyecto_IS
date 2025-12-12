@@ -1,0 +1,7 @@
+Daily:
+• ¿Qué hice ayer?
+	Se hizo la planeación del cuarto sprint, y avancé con la primera CA del sprint
+• ¿Qué haré hoy?
+	Estaré trabajando en la historia para subir musica
+• Impedimentos detectados
+	Ninguno aun
