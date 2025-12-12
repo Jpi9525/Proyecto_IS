@@ -1,0 +1,6 @@
+> ¿Qué hice ayer?
+  A: Ayudar con el sprint planning del sprint 4.
+> ¿Qué haré hoy?
+  A: Comenzar a testear las funciones agregadas por mis compañeros.
+> Impedimentos detectados:
+  - Hay partes realizadas que no concuerdan con las partes realizadas de mi parte.
