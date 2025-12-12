@@ -1,7 +1,6 @@
 > ¿Qué hice ayer?
-  A: Estuve agregando ciertos featuring a la pestaña de perfil.
-     Debuggeando para que quedará con lo realizado por mis compañeros.
-> ¿Qué haré hoy?
   A: Continuar juntando el trabajo para que el flujo quede de manera correcta.
+> ¿Qué haré hoy?
+  A: Ayudar con el sprint planning del sprint 4.
 > Impedimentos detectados:
-  - Se mergea de manera incorrecta y provoca que los archivos terminan siendo Frankenstein.
+  - Hubo un atraso en el sprint 3, por lo tanto, se tuvo que pasar al sprint 4 ciertas actividades.
