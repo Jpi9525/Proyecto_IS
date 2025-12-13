@@ -1,0 +1,7 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer termine de juntar todo y hacer el encolar cola
+• ¿Qué haré hoy?
+Documentación y depuración de codigo
+• Impedimentos detectados
+Muchas inconsistencias a la hora de hacer las historias
