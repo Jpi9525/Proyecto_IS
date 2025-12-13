@@ -1,0 +1,7 @@
+Daily:
+• ¿Qué hice ayer?
+	Ayer no se pudo trabajar, por motivos personales
+• ¿Qué haré hoy?
+	Hoy haré las funciones del artista como subir música, y habilitar o deshabilitar la descarga.
+• Impedimentos detectados
+	Ninguno aun
