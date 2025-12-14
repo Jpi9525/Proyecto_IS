@@ -1,0 +1,6 @@
+> ¿Qué hice ayer?
+  A: Ayudé a avanzar la documentación técnica del proyecto.
+> ¿Qué haré hoy?
+  A: Arreglaré el diseño de la aplicación.
+> Impedimentos detectados:
+  - Complicaciones a la hora de limpiar el código para que quede bien modulado.
