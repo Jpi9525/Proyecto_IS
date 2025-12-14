@@ -1,0 +1,9 @@
+Daily:
+• ¿Qué hice ayer?
+Ayer intente conectar todas las partes restantes del proyecto  (Aunque no tuve exito)
+
+• ¿Qué haré hoy?
+Hoy me centrare en la documentación y pruebas tecnicas
+
+• Impedimentos detectados
+No poder implementar y juntar todo debido a problemas con git
