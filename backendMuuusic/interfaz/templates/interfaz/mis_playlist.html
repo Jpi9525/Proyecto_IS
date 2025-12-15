@@ -1,0 +1,980 @@
+{% extends 'interfaz/base_player.html' %}
+{% load static %}
+
+{% block title %}Mis Playlists - MuuuSIC{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========== ESTILOS ESPECÍFICOS DE MIS PLAYLISTS ========== */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .page-header h1 {
+        font-size: 32px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .page-header h1 i {
+        color: var(--french-rose);
+    }
+    
+    .back-btn {
+        background: var(--bg-card);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+    }
+    .back-btn:hover { 
+        background: var(--french-rose); 
+    }
+    
+    .playlists-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 25px;
+    }
+    
+    .playlist-card {
+        background: var(--bg-card);
+        border-radius: 8px;
+        padding: 20px;
+        transition: all 0.3s;
+        position: relative;
+    }
+    .playlist-card:hover {
+        background: var(--bg-hover);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(243, 72, 125, 0.2);
+    }
+    
+    .playlist-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .playlist-cover {
+        width: 100%;
+        aspect-ratio: 1;
+        background: linear-gradient(135deg, var(--french-rose), #8b5cf6);
+        border-radius: 6px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 60px;
+        position: relative;
+        overflow: hidden;
+    }
+    .playlist-cover img { 
+        width: 100%; 
+        height: 100%; 
+        object-fit: cover; 
+    }
+    
+    .play-btn-card {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        width: 45px;
+        height: 45px;
+        background: var(--french-rose);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+    .playlist-card:hover .play-btn-card {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .playlist-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: var(--text-main);
+    }
+    
+    .playlist-meta {
+        font-size: 14px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .visibility-badge {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+    .visibility-badge.public { 
+        background: rgba(0,200,83,0.2); 
+        color: #00c853; 
+    }
+    .visibility-badge.private { 
+        background: rgba(255,255,255,0.1); 
+        color: var(--text-muted); 
+    }
+    
+    /* ========== MENÚ DE 3 PUNTOS ========== */
+    .menu-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 32px;
+        height: 32px;
+        background: rgba(0,0,0,0.7);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        opacity: 0;
+        transition: all 0.3s;
+        z-index: 10;
+    }
+    .playlist-card:hover .menu-btn { opacity: 1; }
+    .menu-btn:hover { 
+        background: var(--french-rose); 
+        transform: scale(1.1); 
+    }
+    
+    /* Dropdown menu */
+    .dropdown-menu {
+        position: absolute;
+        top: 55px;
+        right: 15px;
+        background: #282828;
+        border-radius: 8px;
+        padding: 8px 0;
+        min-width: 200px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        z-index: 100;
+        display: none;
+    }
+    .dropdown-menu.show { display: block; }
+    
+    .dropdown-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: background 0.2s;
+        color: white;
+        font-size: 14px;
+    }
+    .dropdown-item:hover { background: rgba(255,255,255,0.1); }
+    .dropdown-item.danger { color: #ff4444; }
+    .dropdown-item.danger:hover { background: rgba(255,68,68,0.2); }
+    
+    .dropdown-divider {
+        height: 1px;
+        background: rgba(255,255,255,0.1);
+        margin: 8px 0;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 80px;
+        color: var(--text-muted);
+        grid-column: 1/-1;
+    }
+    .empty-state span { 
+        font-size: 80px; 
+        display: block; 
+        margin-bottom: 20px; 
+    }
+    
+    /* ========== MODALES ========== */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.85);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .modal-overlay.show { display: flex; }
+    
+    .modal {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 85vh;
+        overflow-y: auto;
+        position: relative;
+    }
+    .modal h2 {
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 22px;
+    }
+    .modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 28px;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+    .modal-close:hover { color: white; }
+    
+    /* Opciones de imagen */
+    .image-options {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .image-option {
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: all 0.3s;
+        background: linear-gradient(135deg, var(--french-rose), #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+    }
+    .image-option:hover { 
+        border-color: var(--french-rose); 
+        transform: scale(1.05); 
+    }
+    .image-option.selected { 
+        border-color: var(--french-rose); 
+        box-shadow: 0 0 20px rgba(243, 72, 125, 0.5); 
+    }
+    .image-option img { width: 100%; height: 100%; object-fit: cover; }
+    
+    /* Upload section */
+    .upload-section {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .upload-section h3 {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+    .upload-area {
+        border: 2px dashed #555;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .upload-area:hover { 
+        border-color: var(--french-rose); 
+        background: rgba(243, 72, 125, 0.1); 
+    }
+    .upload-area.dragover { 
+        border-color: var(--french-rose); 
+        background: rgba(243, 72, 125, 0.2); 
+    }
+    .upload-area input { display: none; }
+    .upload-area p { color: var(--text-muted); margin-top: 10px; font-size: 13px; }
+    
+    .upload-preview {
+        margin-top: 15px;
+        display: none;
+    }
+    .upload-preview.show { display: block; }
+    .upload-preview img {
+        max-width: 150px;
+        max-height: 150px;
+        border-radius: 8px;
+        margin: 0 auto;
+        display: block;
+    }
+    .upload-preview .filename {
+        text-align: center;
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+    
+    /* Input de nombre */
+    .input-group {
+        margin-bottom: 20px;
+    }
+    .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+    .input-group input {
+        width: 100%;
+        padding: 12px 16px;
+        background: #404040;
+        border: 1px solid #555;
+        border-radius: 8px;
+        color: white;
+        font-size: 16px;
+    }
+    .input-group input:focus {
+        outline: none;
+        border-color: var(--french-rose);
+    }
+    .char-counter {
+        text-align: right;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+    
+    /* Botones */
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-primary {
+        background: var(--french-rose);
+        color: white;
+    }
+    .btn-primary:hover { 
+        background: var(--cranberry); 
+        transform: scale(1.02); 
+    }
+    .btn-primary:disabled { 
+        background: #555; 
+        cursor: not-allowed; 
+    }
+    .btn-secondary {
+        background: transparent;
+        color: white;
+        border: 1px solid #555;
+    }
+    .btn-secondary:hover { border-color: white; }
+    .btn-danger {
+        background: #ff4444;
+        color: white;
+    }
+    .btn-danger:hover { background: #ff6666; }
+    
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 25px;
+    }
+    
+    /* Confirmación de eliminación */
+    .confirm-delete {
+        text-align: center;
+        padding: 20px 0;
+    }
+    .confirm-delete .icon {
+        font-size: 60px;
+        margin-bottom: 15px;
+    }
+    .confirm-delete p {
+        color: var(--text-muted);
+        margin-bottom: 10px;
+    }
+    .confirm-delete .playlist-name {
+        font-size: 20px;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 20px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .page-header h1 { font-size: 24px; }
+        .playlists-grid { gap: 15px; }
+        .playlist-card { padding: 15px; }
+        .menu-btn { opacity: 1; }
+        .modal { padding: 20px; }
+        .image-options { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h1><i class="fa-solid fa-list"></i> Mis Playlists</h1>
+        <button class="back-btn" onclick="history.back()">← Volver</button>
+    </div>
+
+    <div class="playlists-grid">
+    {% for playlist in playlists %}
+    <div class="playlist-card" 
+        data-id="{{ playlist.id }}" 
+        data-nombre="{{ playlist.nombre|escapejs }}" 
+        data-publica="{{ playlist.es_publica }}">
+        
+        <button class="menu-btn" onclick="toggleMenu(event, this)">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+        
+        <div class="dropdown-menu" id="menu-{{ playlist.id }}">
+            <div class="dropdown-item" data-action="portada">
+                <i class="fa-solid fa-image"></i> Cambiar portada
+            </div>
+            <div class="dropdown-item" data-action="visibilidad">
+                {% if playlist.es_publica %}
+                <i class="fa-solid fa-lock"></i> Hacer privada
+                {% else %}
+                <i class="fa-solid fa-globe"></i> Hacer pública
+                {% endif %}
+            </div>
+            <div class="dropdown-item" data-action="renombrar">
+                <i class="fa-solid fa-pen"></i> Cambiar nombre
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" data-action="eliminar">
+                <i class="fa-solid fa-trash"></i> Eliminar playlist
+            </div>
+        </div>
+    
+        <a href="{% url 'ver_playlist' playlist.id %}" class="playlist-link">
+            <div class="playlist-cover" id="cover-{{ playlist.id }}">
+                {% if playlist.portada and 'placeholder' not in playlist.portada %}
+                    <img src="{{ playlist.portada }}" alt="{{ playlist.nombre }}">
+                {% else %}
+                    🎵
+                {% endif %}
+                <button class="play-btn-card" onclick="event.preventDefault();">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+            </div>
+            <div class="playlist-title" id="title-{{ playlist.id }}">{{ playlist.nombre }}</div>
+            <div class="playlist-meta">
+                {{ playlist.total_canciones }} canciones
+                <span class="visibility-badge {% if playlist.es_publica %}public{% else %}private{% endif %}" id="badge-{{ playlist.id }}">
+                    {% if playlist.es_publica %}
+                    <i class="fa-solid fa-globe"></i> Pública
+                    {% else %}
+                    <i class="fa-solid fa-lock"></i> Privada
+                    {% endif %}
+                </span>
+            </div>
+        </a>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <span>📋</span>
+        <p>No tienes playlists todavía</p>
+        <p style="margin-top: 10px; font-size: 14px;">Crea una desde tu lista de reproducción</p>
+    </div>
+    {% endfor %}
+    </div>
+
+    <!-- Modal Portada -->
+    <div class="modal-overlay" id="modalPortada">
+        <div class="modal">
+            <button class="modal-close" onclick="cerrarModal('modalPortada')">&times;</button>
+            <h2><i class="fa-solid fa-image"></i> Cambiar portada</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Selecciona una imagen predeterminada o sube la tuya</p>
+            
+            <input type="hidden" id="portadaPlaylistId">
+            
+            <div class="image-options" id="imageOptions">
+                <div class="image-option" data-gradient="linear-gradient(135deg, #ff1493, #8b5cf6)" onclick="selectImage(this)">🎵</div>
+                <div class="image-option" data-gradient="linear-gradient(135deg, #00c853, #00bcd4)" onclick="selectImage(this)">🎸</div>
+                <div class="image-option" data-gradient="linear-gradient(135deg, #ff9800, #f44336)" onclick="selectImage(this)">🎹</div>
+                <div class="image-option" data-gradient="linear-gradient(135deg, #2196f3, #9c27b0)" onclick="selectImage(this)">🎧</div>
+                <div class="image-option" data-gradient="linear-gradient(135deg, #e91e63, #ff5722)" onclick="selectImage(this)">🎤</div>
+                <div class="image-option" data-gradient="linear-gradient(135deg, #4caf50, #8bc34a)" onclick="selectImage(this)">🎺</div>
+            </div>
+            
+            <div class="upload-section">
+                <h3>O sube tu propia imagen:</h3>
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <span style="font-size: 40px;">📤</span>
+                    <p>Haz clic o arrastra una imagen aquí</p>
+                    <p style="font-size: 11px;">JPG, PNG, GIF o WEBP (máx. 5MB)</p>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+                <div class="upload-preview" id="uploadPreview">
+                    <img id="previewImg" src="" alt="Preview">
+                    <p class="filename" id="fileName"></p>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarModal('modalPortada')">Cancelar</button>
+                <button class="btn btn-primary" id="btnGuardarPortada" onclick="guardarPortada()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Renombrar -->
+    <div class="modal-overlay" id="modalRenombrar">
+        <div class="modal">
+            <button class="modal-close" onclick="cerrarModal('modalRenombrar')">&times;</button>
+            <h2><i class="fa-solid fa-pen"></i> Cambiar nombre</h2>
+            
+            <input type="hidden" id="renombrarPlaylistId">
+            
+            <div class="input-group">
+                <label for="nuevoNombre">Nuevo nombre de la playlist</label>
+                <input type="text" id="nuevoNombre" maxlength="30" placeholder="Mi playlist favorita">
+                <div class="char-counter"><span id="charCount">0</span>/30</div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarModal('modalRenombrar')">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarNombre()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Eliminar -->
+    <div class="modal-overlay" id="modalEliminar">
+        <div class="modal">
+            <button class="modal-close" onclick="cerrarModal('modalEliminar')">&times;</button>
+            
+            <div class="confirm-delete">
+                <div class="icon">🗑️</div>
+                <p>¿Estás seguro que deseas eliminar esta playlist?</p>
+                <div class="playlist-name" id="eliminarNombre"></div>
+                <p style="color: #ff4444; font-size: 13px;">Esta acción no se puede deshacer</p>
+            </div>
+            
+            <input type="hidden" id="eliminarPlaylistId">
+            
+            <div class="modal-actions" style="justify-content: center;">
+                <button class="btn btn-secondary" onclick="cerrarModal('modalEliminar')">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmarEliminar()">Sí, eliminar</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script>
+(function () {
+    // ========== VARIABLES ==========
+    var selectedImage = null;
+    var uploadedFile = null;
+
+    // ========== MENÚ DESPLEGABLE ==========
+    window.toggleMenu = function(event, button) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const card = button.closest('.playlist-card');
+        const playlistId = card.dataset.id;
+        
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+        });
+        
+        const menu = document.getElementById(`menu-${playlistId}`);
+        if (menu) menu.classList.toggle('show');
+    };
+
+    // Cerrar menús al hacer clic fuera
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.menu-btn') && !event.target.closest('.dropdown-menu')) {
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
+
+    // ========== MODALES ==========
+    window.cerrarModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modal.classList.remove('show');
+        selectedImage = null;
+        uploadedFile = null;
+        document.querySelectorAll('.image-option').forEach(opt => opt.classList.remove('selected'));
+        const uploadPreview = document.getElementById('uploadPreview');
+        if (uploadPreview) uploadPreview.classList.remove('show');
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) fileInput.value = '';
+    };
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(event) {
+            if (event.target === this) {
+                this.classList.remove('show');
+            }
+        });
+    });
+
+    // ========== MODAL PORTADA ==========
+    window.abrirModalPortada = function(playlistId, nombre) {
+        document.getElementById('portadaPlaylistId').value = playlistId;
+        document.getElementById('modalPortada').classList.add('show');
+        selectedImage = null;
+        uploadedFile = null;
+        document.querySelectorAll('.image-option').forEach(opt => opt.classList.remove('selected'));
+        const uploadPreview = document.getElementById('uploadPreview');
+        if (uploadPreview) uploadPreview.classList.remove('show');
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) fileInput.value = '';
+    };
+
+    window.selectImage = function(element) {
+        document.querySelectorAll('.image-option').forEach(opt => opt.classList.remove('selected'));
+        element.classList.add('selected');
+        selectedImage = element.dataset.gradient;
+        uploadedFile = null;
+        const uploadPreview = document.getElementById('uploadPreview');
+        if (uploadPreview) uploadPreview.classList.remove('show');
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) fileInput.value = '';
+    };
+
+    // ========== SUBIDA DE ARCHIVO ==========
+    (function initUpload() {
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                handleFile(e.target.files[0]);
+            });
+        }
+
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFile(file);
+            });
+        }
+    })();
+
+    function handleFile(file) {
+        if (!file) return;
+        
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast('Tipo de archivo no permitido. Usa JPG, PNG, GIF o WEBP', 'error');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('La imagen es muy grande (máximo 5MB)', 'error');
+            return;
+        }
+        
+        uploadedFile = file;
+        document.querySelectorAll('.image-option').forEach(opt => opt.classList.remove('selected'));
+        selectedImage = null;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('uploadPreview').classList.add('show');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    window.guardarPortada = async function() {
+        const playlistId = document.getElementById('portadaPlaylistId').value;
+        const btn = document.getElementById('btnGuardarPortada');
+        
+        if (!selectedImage && !uploadedFile) {
+            showToast('Selecciona una imagen o sube una propia', 'error');
+            return;
+        }
+        
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+        
+        try {
+            const formData = new FormData();
+            formData.append('playlist_id', playlistId);
+            
+            if (uploadedFile) {
+                formData.append('imagen', uploadedFile);
+            } else if (selectedImage) {
+                formData.append('imagen_predeterminada', selectedImage);
+            }
+            
+            const response = await fetch('/api/playlist/actualizar-portada/', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast(data.message);
+                
+                const coverElement = document.getElementById(`cover-${playlistId}`);
+                if (coverElement && data.nueva_portada && !data.nueva_portada.includes('gradient')) {
+                    coverElement.innerHTML = `<img src="${data.nueva_portada}" alt="Portada"><button class="play-btn-card" onclick="event.preventDefault();"><i class="fa-solid fa-play"></i></button>`;
+                }
+                
+                cerrarModal('modalPortada');
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error al guardar la portada', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Guardar';
+        }
+    };
+
+    // ========== TOGGLE VISIBILIDAD ==========
+    window.toggleVisibilidad = async function(playlistId) {
+        try {
+            const response = await fetch('/api/playlist/toggle-visibilidad/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playlist_id: playlistId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast(data.message);
+                
+                const badge = document.getElementById(`badge-${playlistId}`);
+                if (badge) {
+                    if (data.es_publica) {
+                        badge.className = 'visibility-badge public';
+                        badge.innerHTML = '<i class="fa-solid fa-globe"></i> Pública';
+                    } else {
+                        badge.className = 'visibility-badge private';
+                        badge.innerHTML = '<i class="fa-solid fa-lock"></i> Privada';
+                    }
+                }
+                
+                const menu = document.getElementById(`menu-${playlistId}`);
+                if (menu) {
+                    const visibilidadItem = menu.querySelector('[data-action="visibilidad"]');
+                    if (visibilidadItem) {
+                        visibilidadItem.innerHTML = data.es_publica 
+                            ? '<i class="fa-solid fa-lock"></i> Hacer privada' 
+                            : '<i class="fa-solid fa-globe"></i> Hacer pública';
+                    }
+                }
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error al cambiar la visibilidad', 'error');
+        }
+    };
+
+    // ========== MODAL RENOMBRAR ==========
+    window.abrirModalRenombrar = function(playlistId, nombreActual) {
+        document.getElementById('renombrarPlaylistId').value = playlistId;
+        document.getElementById('nuevoNombre').value = nombreActual;
+        document.getElementById('charCount').textContent = nombreActual.length;
+        document.getElementById('modalRenombrar').classList.add('show');
+        
+        setTimeout(() => {
+            const input = document.getElementById('nuevoNombre');
+            input.focus();
+            input.select();
+        }, 100);
+    };
+
+    (function initRenombrarInputs() {
+        const nuevoNombreInput = document.getElementById('nuevoNombre');
+        if (!nuevoNombreInput) return;
+
+        nuevoNombreInput.addEventListener('input', function() {
+            document.getElementById('charCount').textContent = this.value.length;
+        });
+
+        nuevoNombreInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') guardarNombre();
+        });
+    })();
+
+    window.guardarNombre = async function() {
+        const playlistId = document.getElementById('renombrarPlaylistId').value;
+        const nuevoNombre = document.getElementById('nuevoNombre').value.trim();
+        
+        if (!nuevoNombre) {
+            showToast('El nombre no puede estar vacío', 'error');
+            return;
+        }
+        
+        if (nuevoNombre.length > 30) {
+            showToast('El nombre es muy largo (máximo 30 caracteres)', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/playlist/renombrar/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playlist_id: playlistId, nombre: nuevoNombre })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast(data.message);
+                
+                const titleElement = document.getElementById(`title-${playlistId}`);
+                if (titleElement) titleElement.textContent = nuevoNombre;
+                
+                const card = document.querySelector(`.playlist-card[data-id="${playlistId}"]`);
+                if (card) card.dataset.nombre = nuevoNombre;
+                
+                cerrarModal('modalRenombrar');
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error al renombrar la playlist', 'error');
+        }
+    };
+
+    // ========== MODAL ELIMINAR ==========
+    window.abrirModalEliminar = function(playlistId, nombre) {
+        document.getElementById('eliminarPlaylistId').value = playlistId;
+        document.getElementById('eliminarNombre').textContent = `"${nombre}"`;
+        document.getElementById('modalEliminar').classList.add('show');
+    };
+
+    window.confirmarEliminar = async function() {
+        const playlistId = document.getElementById('eliminarPlaylistId').value;
+        
+        try {
+            const response = await fetch('/api/playlist/eliminar/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playlist_id: playlistId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast(data.message);
+                
+                const card = document.querySelector(`.playlist-card[data-id="${playlistId}"]`);
+                if (card) {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.transform = 'scale(0.8)';
+                    card.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        card.remove();
+                        const grid = document.querySelector('.playlists-grid');
+                        if (grid && grid.querySelectorAll('.playlist-card').length === 0) {
+                            grid.innerHTML = `
+                                <div class="empty-state">
+                                    <span>📋</span>
+                                    <p>No tienes playlists todavía</p>
+                                    <p style="margin-top: 10px; font-size: 14px;">Crea una desde tu lista de reproducción</p>
+                                </div>
+                            `;
+                        }
+                    }, 300);
+                }
+                
+                cerrarModal('modalEliminar');
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error al eliminar la playlist', 'error');
+        }
+    };
+
+    // ========== MANEJADOR DE ACCIONES DEL MENÚ ==========
+    document.querySelectorAll('.dropdown-item[data-action]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const card = this.closest('.playlist-card');
+            const playlistId = card.dataset.id;
+            const playlistNombre = card.dataset.nombre;
+            const action = this.dataset.action;
+            
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            
+            switch(action) {
+                case 'portada': abrirModalPortada(playlistId, playlistNombre); break;
+                case 'visibilidad': toggleVisibilidad(playlistId); break;
+                case 'renombrar': abrirModalRenombrar(playlistId, playlistNombre); break;
+                case 'eliminar': abrirModalEliminar(playlistId, playlistNombre); break;
+            }
+        });
+    });
+
+    // ========== TECLA ESC ==========
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.show').forEach(modal => {
+                modal.classList.remove('show');
+            });
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
+
+    console.log('🎵 Mis Playlists - Sistema de edición cargado');
+})();
+</script>
+{% endblock %}

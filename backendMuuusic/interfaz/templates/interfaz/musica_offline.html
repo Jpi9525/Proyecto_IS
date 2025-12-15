@@ -1,0 +1,475 @@
+{% extends 'interfaz/base_player.html' %}
+{% load static %}
+
+{% block title %}Música Sin Conexión - MuuuSica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 40px 40px 20px;
+    }
+
+    .page-title {
+        font-size: 32px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .page-title .icon {
+        font-size: 28px;
+        color: var(--french-rose);
+    }
+
+    .stats {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        padding: 0 40px;
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        padding: 20px 30px;
+        border-radius: 12px;
+        text-align: center;
+        min-width: 150px;
+    }
+
+    .stat-number {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--french-rose);
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-top: 5px;
+    }
+
+    .section {
+        margin-bottom: 40px;
+        padding: 0 40px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    .items-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .item-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 15px;
+        transition: all 0.3s;
+        cursor: pointer;
+        position: relative;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .item-card:hover {
+        background: var(--bg-card-hover);
+        transform: translateY(-5px);
+    }
+
+    .item-cover {
+        width: 100%;
+        aspect-ratio: 1;
+        background: #404040;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        position: relative;
+    }
+
+    .item-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .downloaded-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #1db954;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .item-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .item-subtitle {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .item-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 18px;
+        padding: 5px;
+        transition: all 0.3s;
+    }
+
+    .action-btn:hover {
+        color: var(--french-rose);
+        transform: scale(1.2);
+    }
+
+    .action-btn.delete:hover {
+        color: #ff4444;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-secondary);
+    }
+
+    .empty-state .icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+        color: var(--french-rose);
+    }
+
+    .empty-state h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+        color: white;
+    }
+
+    .empty-state p {
+        font-size: 14px;
+    }
+
+    .songs-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-bottom: 20px;
+    }
+
+    .song-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 15px;
+        background: var(--bg-card);
+        border-radius: 8px;
+        transition: background 0.3s;
+        cursor: pointer;
+    }
+
+    .song-row:hover {
+        background: var(--bg-card-hover);
+    }
+
+    .song-row.playing, .song-row.active {
+        background: rgba(243, 72, 125, 0.2);
+    }
+
+    .song-cover-small {
+        width: 50px;
+        height: 50px;
+        border-radius: 6px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .song-cover-small img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .song-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .song-title {
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .song-artist {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .song-duration {
+        color: var(--text-secondary);
+        font-size: 12px;
+        margin-right: 15px;
+    }
+
+    @media (max-width: 768px) {
+        .header, .stats, .section { padding-left: 20px; padding-right: 20px; }
+        .page-title { font-size: 24px; }
+        .stats { gap: 15px; }
+        .stat-card { padding: 15px 20px; min-width: 100px; }
+        .stat-number { font-size: 28px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="header">
+        <h1 class="page-title">
+            <i class="fa-solid fa-cloud-arrow-down icon"></i>
+            Música Sin Conexión
+        </h1>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number" id="totalCanciones">{{ total_canciones }}</div>
+            <div class="stat-label">Canciones</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalAlbumes">{{ total_albumes }}</div>
+            <div class="stat-label">Álbumes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalPlaylists">{{ total_playlists }}</div>
+            <div class="stat-label">Playlists</div>
+        </div>
+    </div>
+
+    {% if albumes %}
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title">Álbumes Descargados</h2>
+        </div>
+        <div class="items-grid" id="albumesGrid">
+            {% for album in albumes %}
+            <a href="{% url 'ver_album' album.id %}" class="item-card" data-id="{{ album.id }}" data-tipo="album">
+                <div class="item-cover">
+                    <img src="{{ album.portada }}" alt="{{ album.titulo }}">
+                    <div class="downloaded-badge"><i class="fa-solid fa-check"></i> Offline</div>
+                </div>
+                <div class="item-title">{{ album.titulo }}</div>
+                <div class="item-subtitle">{{ album.artista }} • {{ album.total_canciones }} canciones</div>
+                <div class="item-actions">
+                    <button class="action-btn delete delete-btn" data-id="{{ album.id }}" data-tipo="album" title="Eliminar descarga">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if playlists %}
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title">Playlists Descargadas</h2>
+        </div>
+        <div class="items-grid" id="playlistsGrid">
+            {% for playlist in playlists %}
+            <a href="{% url 'ver_playlist' playlist.id %}" class="item-card" data-id="{{ playlist.id }}" data-tipo="playlist">
+                <div class="item-cover">
+                    <img src="{{ playlist.portada }}" alt="{{ playlist.nombre }}">
+                    <div class="downloaded-badge"><i class="fa-solid fa-check"></i> Offline</div>
+                </div>
+                <div class="item-title">{{ playlist.nombre }}</div>
+                <div class="item-subtitle">{{ playlist.total_canciones }} canciones</div>
+                <div class="item-actions">
+                    <button class="action-btn delete delete-btn" data-id="{{ playlist.id }}" data-tipo="playlist" title="Eliminar descarga">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if canciones %}
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title">Canciones Descargadas</h2>
+        </div>
+        <div class="songs-list" id="cancionesList">
+            {% for cancion in canciones %}
+            <div class="song-row" 
+                 data-id="{{ cancion.id }}" 
+                 data-tipo="cancion"
+                 data-ruta="{{ cancion.ruta_archivo }}"
+                 data-titulo="{{ cancion.titulo }}"
+                 data-artista="{{ cancion.artista }}"
+                 data-portada="{{ cancion.portada }}">
+                <div class="song-cover-small">
+                    <img src="{{ cancion.portada }}" alt="{{ cancion.titulo }}">
+                </div>
+                <div class="song-info">
+                    <div class="song-title">{{ cancion.titulo }}</div>
+                    <div class="song-artist">{{ cancion.artista }}</div>
+                </div>
+                <div class="song-duration">{{ cancion.duracion }}</div>
+                <button class="action-btn delete delete-btn" data-id="{{ cancion.id }}" data-tipo="cancion" title="Eliminar">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not canciones and not albumes and not playlists %}
+    <div class="empty-state">
+        <div class="icon"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+        <h3>No tienes música descargada</h3>
+        <p>Descarga canciones, álbumes o playlists para escuchar sin conexión</p>
+        <a href="{% url 'lista_reproduccion' %}" style="color: var(--french-rose); margin-top: 15px; display: inline-block;">Explorar música</a>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script>
+(function () {
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const id = this.dataset.id;
+            const tipo = this.dataset.tipo;
+            const item = this.closest('[data-id]');
+            
+            if (!confirm('¿Eliminar esta descarga?')) return;
+            
+            let url = '';
+            let body = {};
+            
+            if (tipo === 'cancion') {
+                url = '/api/descargar/cancion/';
+                body = { cancion_id: id };
+            } else if (tipo === 'album') {
+                url = '/api/descargar/album/';
+                body = { album_id: id };
+            } else if (tipo === 'playlist') {
+                url = '/api/descargar/playlist/';
+                body = { playlist_id: id };
+            }
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message);
+                    item.style.transition = 'all 0.3s';
+                    item.style.opacity = '0';
+                    item.style.transform = 'scale(0.8)';
+                    
+                    setTimeout(() => {
+                        item.remove();
+                        actualizarContadores();
+                    }, 300);
+                } else {
+                    showToast(data.message || 'Error', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Error de conexión', 'error');
+            }
+        });
+    });
+
+    function actualizarContadores() {
+        const canciones = document.querySelectorAll('.song-row').length;
+        const albumes = document.querySelectorAll('#albumesGrid .item-card').length;
+        const playlists = document.querySelectorAll('#playlistsGrid .item-card').length;
+        
+        document.getElementById('totalCanciones').textContent = canciones;
+        document.getElementById('totalAlbumes').textContent = albumes;
+        document.getElementById('totalPlaylists').textContent = playlists;
+        
+        if (canciones === 0 && albumes === 0 && playlists === 0) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(s => s.remove());
+            
+            const content = document.querySelector('#spaContent') || document.body;
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = `
+                <div class="icon"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+                <h3>No tienes música descargada</h3>
+                <p>Descarga canciones, álbumes o playlists para escuchar sin conexión</p>
+                <a href="/lista-reproduccion/" style="color: var(--french-rose); margin-top: 15px; display: inline-block;">Explorar música</a>
+            `;
+            content.appendChild(emptyState);
+        }
+    }
+
+    document.querySelectorAll('.song-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-btn')) return;
+            
+            const songId = this.dataset.id;
+            if (songId && typeof reproducirCancion === 'function') {
+                reproducirCancion(songId);
+            }
+        });
+    });
+
+    console.log('Música offline inicializada');
+
+})();
+</script>
+{% endblock %}

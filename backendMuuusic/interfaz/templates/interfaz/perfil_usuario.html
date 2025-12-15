@@ -1,0 +1,745 @@
+{% extends 'interfaz/base_player.html' %}
+{% load static %}
+
+{% block title %}{{ usuario.nombre }} {{ usuario.apellido }} - Perfil | MuuuSica{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'interfaz/css/perfil_usuario.css' %}">
+<style>
+/* ========== FIX: BOTONES DEL PERFIL ========== */
+.profile-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 15px !important;
+    margin-left: auto !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+}
+
+.profile-actions .action-btn,
+.profile-actions a.action-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    padding: 14px 28px !important;
+    min-width: 160px !important;
+    height: auto !important;
+    border-radius: 30px !important;
+    background: #1a1a1a !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: white !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    white-space: nowrap !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+.profile-actions .action-btn:hover,
+.profile-actions a.action-btn:hover {
+    background: #2a2a2a !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
+}
+
+.profile-actions .action-btn i,
+.profile-actions a.action-btn i {
+    font-size: 16px !important;
+}
+
+.profile-actions .action-btn.primary {
+    background: linear-gradient(135deg, #f3487d, #d2587c) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 4px 20px rgba(243, 72, 125, 0.4) !important;
+}
+
+.profile-actions .action-btn.primary:hover {
+    background: linear-gradient(135deg, #d2587c, #aa4d68) !important;
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 8px 30px rgba(243, 72, 125, 0.5) !important;
+}
+
+.profile-actions .btn-verify-artist {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    padding: 14px 28px !important;
+    min-width: 200px !important;
+    height: auto !important;
+    border-radius: 30px !important;
+    background: linear-gradient(135deg, #aa4d68, #8b3a52) !important;
+    border: none !important;
+    color: white !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    white-space: nowrap !important;
+    box-shadow: 0 4px 20px rgba(170, 77, 104, 0.4) !important;
+}
+
+.profile-actions .btn-verify-artist:hover {
+    background: linear-gradient(135deg, #d2587c, #aa4d68) !important;
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 8px 30px rgba(170, 77, 104, 0.5) !important;
+}
+
+.profile-actions .btn-upload-music {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    padding: 14px 28px !important;
+    min-width: 180px !important;
+    height: auto !important;
+    border-radius: 30px !important;
+    background: linear-gradient(135deg, #1db954, #169c46) !important;
+    border: none !important;
+    color: white !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    white-space: nowrap !important;
+    box-shadow: 0 4px 20px rgba(29, 185, 84, 0.4) !important;
+}
+
+.profile-actions .btn-upload-music:hover {
+    background: linear-gradient(135deg, #1ed760, #1db954) !important;
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 8px 30px rgba(29, 185, 84, 0.5) !important;
+}
+
+@media (max-width: 768px) {
+    .profile-actions {
+        justify-content: center !important;
+        margin-left: 0 !important;
+    }
+    
+    .profile-actions .action-btn,
+    .profile-actions a.action-btn,
+    .profile-actions .btn-verify-artist,
+    .profile-actions .btn-upload-music {
+        min-width: 140px !important;
+        padding: 12px 20px !important;
+        font-size: 13px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+    
+    .profile-actions .action-btn,
+    .profile-actions a.action-btn,
+    .profile-actions .btn-verify-artist,
+    .profile-actions .btn-upload-music {
+        width: 100% !important;
+        min-width: unset !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<div class="main-content">
+    
+    <div class="profile-header">
+        {% if usuario.foto_perfil_path %}
+            <img src="{{ usuario.foto_perfil_path }}" alt="{{ usuario.nombre }}" class="avatar">
+        {% else %}
+            <div class="avatar-placeholder">
+                <i class="fa-solid fa-user"></i>
+            </div>
+        {% endif %}
+
+        <div class="profile-info">
+            {% if usuario.es_artista %}
+                <span class="profile-label label-artista">
+                    <i class="fa-solid fa-circle-check"></i> ARTISTA VERIFICADO
+                </span>
+            {% else %}
+                <span class="profile-label">Perfil</span>
+            {% endif %}
+
+            <h1 class="profile-name">
+                {{ usuario.nombre }} {{ usuario.apellido }}
+                {% if usuario.es_artista %}
+                    <span class="artist-badge" title="Artista Verificado">
+                        <i class="fa-solid fa-check"></i>
+                    </span>
+                {% endif %}
+            </h1>
+            
+            {% if usuario.descripcion and usuario.descripcion != 'None' %}
+                <p class="profile-bio">{{ usuario.descripcion }}</p>
+            {% endif %}
+
+            {% if redes %}
+            <div class="profile-socials">
+                {% for red in redes %}
+                <a href="{{ red.url }}" target="_blank" class="social-link" title="{{ red.nombre_red }}">
+                    {% if 'facebook' in red.nombre_red|lower %}
+                        <i class="fa-brands fa-facebook-f"></i>
+                    {% elif 'instagram' in red.nombre_red|lower %}
+                        <i class="fa-brands fa-instagram"></i>
+                    {% elif 'twitter' in red.nombre_red|lower %}
+                        <i class="fa-brands fa-twitter"></i>
+                    {% elif 'tiktok' in red.nombre_red|lower %}
+                        <i class="fa-brands fa-tiktok"></i>
+                    {% else %}
+                        <i class="fa-solid fa-globe"></i>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="profile-actions">
+            <a href="{% url 'mis_playlists' %}" class="action-btn">
+                <i class="fa-solid fa-list-ul"></i> Mis Playlists
+            </a>
+            <button class="action-btn primary" id="btnEditarPerfil">
+                <i class="fa-solid fa-pen"></i> Editar Perfil
+            </button>
+            
+            {% if usuario.es_artista %}
+                <a href="{% url 'subir_album' %}" class="btn-upload-music">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Subir Música
+                </a>
+            {% else %}
+                <button id="btnOpenArtistModal" class="btn-verify-artist">
+                    <i class="fa-solid fa-star"></i> Solicitar verificación
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if cancion_anthem %}
+    <div class="anthem-section">
+        <div class="anthem-header">
+            <img src="{{ cancion_anthem.portada }}" alt="{{ cancion_anthem.titulo }}" class="anthem-cover">
+            <div class="anthem-info">
+                <h4>{{ cancion_anthem.titulo }}</h4>
+                <p>{{ cancion_anthem.artista }} • Mi Himno</p>
+            </div>
+            
+            <button class="action-btn" onclick="reproducirCancion('{{ cancion_anthem.cancion_id }}')">
+                <i class="fa-solid fa-play"></i> Reproducir
+            </button>
+            <button class="action-btn" onclick="compartirCancion('{{ cancion_anthem.cancion_id }}')">
+                <i class="fa-solid fa-share-nodes"></i> Compartir
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="section-divider">
+        <h3>Mis Publicaciones</h3>
+    </div>
+
+    {% if mis_canciones %}
+    <div class="songs-grid">
+        {% for cancion in mis_canciones %}
+        <div class="song-card" data-id="{{ cancion.cancion_id }}" onclick="reproducirCancion('{{ cancion.cancion_id }}')">
+            <div class="song-card-icon">
+                <i class="fa-solid fa-music"></i>
+            </div>
+            <div class="song-card-info">
+                <h4>{{ cancion.titulo }}</h4>
+                <p>{{ cancion.duracion }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fa-solid fa-music"></i>
+        </div>
+        <h3>Aún no tienes publicaciones</h3>
+        <p>Las canciones que subas aparecerán aquí</p>
+    </div>
+    {% endif %}
+
+    <div class="section-divider">
+        <h3>Mis Reseñas ({{ mis_resenas|length }})</h3>
+    </div>
+
+    {% if mis_resenas %}
+    <div class="reviews-grid">
+        {% for resena in mis_resenas %}
+        <div class="review-card">
+            <img src="{{ resena.portada }}" alt="Portada" class="review-cover">
+            <div class="review-content">
+                <div class="review-header">
+                    <a href="#" class="review-song-title" onclick="reproducirCancion('{{ resena.cancion_id }}'); return false;">
+                        {{ resena.cancion_titulo }}
+                    </a>
+                    <span class="review-date">{{ resena.fecha|date:"d M Y" }}</span>
+                </div>
+                <div class="review-stars">
+                    {% if resena.rating == 5 %}★★★★★
+                    {% elif resena.rating == 4 %}★★★★☆
+                    {% elif resena.rating == 3 %}★★★☆☆
+                    {% elif resena.rating == 2 %}★★☆☆☆
+                    {% else %}★☆☆☆☆{% endif %}
+                </div>
+                <p class="review-text">
+                    {% if resena.comentario %}"{{ resena.comentario }}"{% else %}Sin comentario{% endif %}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fa-solid fa-pen-nib"></i>
+        </div>
+        <h3>No has escrito reseñas</h3>
+        <p>Tus opiniones sobre canciones aparecerán aquí</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Editar Perfil</h2>
+            <button class="modal-close" id="closeEditModal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <form action="{% url 'editar_perfil' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre" class="form-input" value="{{ usuario.nombre }}">
+                </div>
+                <div class="form-group">
+                    <label>Apellido</label>
+                    <input type="text" name="apellido" class="form-input" value="{{ usuario.apellido }}">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Bio</label>
+                <textarea name="descripcion" class="form-input" rows="3" style="resize: vertical;">{{ usuario.descripcion|default:"" }}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label>Foto de Perfil</label>
+                    {% if usuario.foto_perfil_path %}
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="eliminar_foto" id="eliminarFoto" value="1">
+                        <label for="eliminarFoto">
+                            <i class="fa-solid fa-trash"></i> Eliminar actual
+                        </label>
+                    </div>
+                    {% endif %}
+                </div>
+                <input type="file" name="foto_perfil" class="form-input" accept="image/*">
+            </div>
+            
+            <div class="form-divider"></div>
+            
+            <div class="form-group">
+                <label class="accent">
+                    <i class="fa-solid fa-music"></i> Canción de Bienvenida (Anthem)
+                </label>
+                <div class="search-dropdown-container">
+                    <input type="text" id="searchAnthemInput" class="form-input" 
+                           placeholder="Buscar canción..." autocomplete="off"
+                           value="{% if cancion_anthem %}{{ cancion_anthem.titulo }}{% endif %}">
+                    <input type="hidden" name="cancion_anthem_id" id="anthemIdInput" 
+                           value="{% if usuario.cancion_id %}{{ usuario.cancion_id }}{% endif %}">
+                    <div id="anthemResults" class="results-list"></div>
+                </div>
+                <span class="clear-selection" onclick="limpiarSeleccionAnthem()">
+                    <i class="fa-solid fa-xmark"></i> Quitar canción
+                </span>
+            </div>
+            
+            <div class="form-divider"></div>
+            
+            {% if redes %}
+            <div class="form-group">
+                <label>Redes Sociales Actuales</label>
+                <div class="social-tags">
+                    {% for red in redes %}
+                    <div class="social-tag">
+                        {% if 'facebook' in red.nombre_red|lower %}
+                            <i class="fa-brands fa-facebook-f"></i>
+                        {% elif 'instagram' in red.nombre_red|lower %}
+                            <i class="fa-brands fa-instagram"></i>
+                        {% elif 'twitter' in red.nombre_red|lower %}
+                            <i class="fa-brands fa-twitter"></i>
+                        {% elif 'tiktok' in red.nombre_red|lower %}
+                            <i class="fa-brands fa-tiktok"></i>
+                        {% else %}
+                            <i class="fa-solid fa-globe"></i>
+                        {% endif %}
+                        {{ red.nombre_red }}
+                        <a href="{% url 'eliminar_red_social' red.pk %}" class="social-tag-delete" 
+                           onclick="return confirm('¿Eliminar este enlace?')">
+                           <i class="fa-solid fa-xmark"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label>Agregar Nueva Red Social</label>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 0.4;">
+                        <select name="nueva_red_nombre" class="form-input">
+                            <option value="">Seleccionar...</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="twitter">Twitter</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="web">Web</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 0.6;">
+                        <input type="url" name="nueva_red_url" class="form-input" placeholder="https://...">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" id="cancelarEdicion">Cancelar</button>
+                <button type="submit" class="btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="artistModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>
+                <i class="fa-solid fa-star"></i> Solicitar Verificación
+            </h2>
+            <button class="modal-close" id="closeArtistModal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+            Completa este formulario para solicitar tu verificación como artista.
+        </p>
+        
+        <div class="form-group">
+            <label>Nombre Artístico *</label>
+            <input type="text" id="nombreArtistico" class="form-input" placeholder="Tu nombre de artista">
+        </div>
+        
+        <div class="form-group">
+            <label>Género Musical Principal</label>
+            <select id="generoArtista" class="form-input">
+                <option value="">Seleccionar...</option>
+                <option value="Pop">Pop</option>
+                <option value="Rock">Rock</option>
+                <option value="Hip-hop">Hip-hop</option>
+                <option value="Electronic">Electronic</option>
+                <option value="Reggaeton">Reggaeton</option>
+                <option value="Metal">Metal</option>
+                <option value="Otro">Otro</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Biografía / Descripción</label>
+            <textarea id="bioArtista" class="form-input" rows="3"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Enlaces a tus redes o música</label>
+            <textarea id="redesArtista" class="form-input" rows="2"></textarea>
+        </div>
+        
+        <div class="form-actions">
+            <button type="button" class="btn-secondary" id="cancelarArtista">Cancelar</button>
+            <button type="button" class="btn-primary" id="enviarSolicitudArtista">Enviar Solicitud</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.perfilData = {
+        catalogoCanciones: [
+            {% for c in todas_canciones %}
+            { id: "{{ c.cancion_id }}", titulo: "{{ c.titulo|escapejs }}", artista: "{{ c.artista|escapejs }}" },
+            {% endfor %}
+        ]
+    };
+</script>
+<script src="{% static 'interfaz/js/perfil_usuario.js' %}"></script>
+
+<!-- FIX SPA: Inicializar eventos del perfil -->
+<script data-page-script>
+(function() {
+    'use strict';
+    
+    function inicializarPerfil() {
+        console.log('🔄 Inicializando eventos del perfil...');
+        
+        // ========== MODAL EDITAR PERFIL ==========
+        var btnEditar = document.getElementById('btnEditarPerfil');
+        var modalEdit = document.getElementById('editModal');
+        var closeEdit = document.getElementById('closeEditModal');
+        var cancelEdit = document.getElementById('cancelarEdicion');
+        
+        if (btnEditar && modalEdit) {
+            // Remover eventos anteriores clonando el elemento
+            var nuevoBtn = btnEditar.cloneNode(true);
+            btnEditar.parentNode.replaceChild(nuevoBtn, btnEditar);
+            
+            nuevoBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('✅ Abriendo modal editar');
+                modalEdit.classList.add('active');
+            });
+        }
+        
+        if (closeEdit && modalEdit) {
+            var nuevoClose = closeEdit.cloneNode(true);
+            closeEdit.parentNode.replaceChild(nuevoClose, closeEdit);
+            
+            nuevoClose.addEventListener('click', function(e) {
+                e.preventDefault();
+                modalEdit.classList.remove('active');
+            });
+        }
+        
+        if (cancelEdit && modalEdit) {
+            var nuevoCancel = cancelEdit.cloneNode(true);
+            cancelEdit.parentNode.replaceChild(nuevoCancel, cancelEdit);
+            
+            nuevoCancel.addEventListener('click', function(e) {
+                e.preventDefault();
+                modalEdit.classList.remove('active');
+            });
+        }
+        
+        // Cerrar modal al hacer clic fuera
+        if (modalEdit) {
+            modalEdit.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        }
+        
+        // ========== MODAL SOLICITAR VERIFICACIÓN ==========
+        var btnArtist = document.getElementById('btnOpenArtistModal');
+        var modalArtist = document.getElementById('artistModal');
+        var closeArtist = document.getElementById('closeArtistModal');
+        var cancelArtist = document.getElementById('cancelarArtista');
+        var enviarSolicitud = document.getElementById('enviarSolicitudArtista');
+        
+        if (btnArtist && modalArtist) {
+            var nuevoBtnArtist = btnArtist.cloneNode(true);
+            btnArtist.parentNode.replaceChild(nuevoBtnArtist, btnArtist);
+            
+            nuevoBtnArtist.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('✅ Abriendo modal artista');
+                modalArtist.classList.add('active');
+            });
+        }
+        
+        if (closeArtist && modalArtist) {
+            var nuevoCloseArtist = closeArtist.cloneNode(true);
+            closeArtist.parentNode.replaceChild(nuevoCloseArtist, closeArtist);
+            
+            nuevoCloseArtist.addEventListener('click', function(e) {
+                e.preventDefault();
+                modalArtist.classList.remove('active');
+            });
+        }
+        
+        if (cancelArtist && modalArtist) {
+            var nuevoCancelArtist = cancelArtist.cloneNode(true);
+            cancelArtist.parentNode.replaceChild(nuevoCancelArtist, cancelArtist);
+            
+            nuevoCancelArtist.addEventListener('click', function(e) {
+                e.preventDefault();
+                modalArtist.classList.remove('active');
+            });
+        }
+        
+        // Cerrar modal artista al hacer clic fuera
+        if (modalArtist) {
+            modalArtist.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        }
+        
+        // ========== ENVIAR SOLICITUD ARTISTA ==========
+        if (enviarSolicitud) {
+            var nuevoEnviar = enviarSolicitud.cloneNode(true);
+            enviarSolicitud.parentNode.replaceChild(nuevoEnviar, enviarSolicitud);
+            
+            nuevoEnviar.addEventListener('click', function() {
+                var nombre = document.getElementById('nombreArtistico');
+                var genero = document.getElementById('generoArtista');
+                var bio = document.getElementById('bioArtista');
+                var redes = document.getElementById('redesArtista');
+                
+                if (!nombre || !nombre.value.trim()) {
+                    if (typeof showToast === 'function') {
+                        showToast('Ingresa tu nombre artístico', 'error');
+                    } else {
+                        alert('Ingresa tu nombre artístico');
+                    }
+                    return;
+                }
+                
+                var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+                
+                fetch('/api/solicitar-artista/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken ? csrfToken.value : ''
+                    },
+                    body: JSON.stringify({
+                        nombre_artistico: nombre.value.trim(),
+                        genero: genero ? genero.value : '',
+                        biografia: bio ? bio.value.trim() : '',
+                        redes: redes ? redes.value.trim() : ''
+                    })
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        if (typeof showToast === 'function') {
+                            showToast(data.message || 'Solicitud enviada');
+                        }
+                        if (modalArtist) modalArtist.classList.remove('active');
+                    } else {
+                        if (typeof showToast === 'function') {
+                            showToast(data.message || 'Error al enviar', 'error');
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    if (typeof showToast === 'function') {
+                        showToast('Error de conexión', 'error');
+                    }
+                });
+            });
+        }
+        
+        // ========== BÚSQUEDA ANTHEM ==========
+        var searchInput = document.getElementById('searchAnthemInput');
+        var anthemIdInput = document.getElementById('anthemIdInput');
+        var resultsList = document.getElementById('anthemResults');
+        
+        if (searchInput && resultsList && window.perfilData && window.perfilData.catalogoCanciones) {
+            var nuevoSearch = searchInput.cloneNode(true);
+            searchInput.parentNode.replaceChild(nuevoSearch, searchInput);
+            searchInput = nuevoSearch;
+            
+            searchInput.addEventListener('input', function() {
+                var query = this.value.toLowerCase().trim();
+                
+                if (query.length < 2) {
+                    resultsList.classList.remove('active');
+                    resultsList.innerHTML = '';
+                    return;
+                }
+                
+                var canciones = window.perfilData.catalogoCanciones;
+                var resultados = canciones.filter(function(c) {
+                    return c.titulo.toLowerCase().includes(query) || 
+                           c.artista.toLowerCase().includes(query);
+                }).slice(0, 10);
+                
+                if (resultados.length === 0) {
+                    resultsList.innerHTML = '<div class="result-item"><small>No se encontraron resultados</small></div>';
+                } else {
+                    resultsList.innerHTML = resultados.map(function(c) {
+                        return '<div class="result-item" data-id="' + c.id + '">' +
+                            '<strong>' + c.titulo + '</strong>' +
+                            '<small>' + c.artista + '</small>' +
+                        '</div>';
+                    }).join('');
+                }
+                
+                resultsList.classList.add('active');
+                
+                // Eventos en resultados
+                resultsList.querySelectorAll('.result-item[data-id]').forEach(function(item) {
+                    item.addEventListener('click', function() {
+                        var id = this.dataset.id;
+                        var titulo = this.querySelector('strong').textContent;
+                        
+                        searchInput.value = titulo;
+                        if (anthemIdInput) anthemIdInput.value = id;
+                        resultsList.classList.remove('active');
+                    });
+                });
+            });
+            
+            // Cerrar resultados al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.search-dropdown-container')) {
+                    resultsList.classList.remove('active');
+                }
+            });
+        }
+        
+        console.log('✅ Perfil inicializado correctamente');
+    }
+    
+    // Exponer función para limpiar anthem
+    window.limpiarSeleccionAnthem = function() {
+        var input = document.getElementById('searchAnthemInput');
+        var hiddenInput = document.getElementById('anthemIdInput');
+        if (input) input.value = '';
+        if (hiddenInput) hiddenInput.value = '';
+    };
+    
+    // Ejecutar inmediatamente
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inicializarPerfil);
+    } else {
+        inicializarPerfil();
+    }
+
+    
+    
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,414 @@
+{% extends 'interfaz/base_player.html' %}
+{% load static %}
+
+{% block title %}{{ cancion.titulo }} - Compartir | MuuuSica{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Header */
+    .header {
+        background: linear-gradient(180deg, rgba(40,40,40,0.8) 0%, transparent 100%);
+        padding: 20px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(20px);
+    }
+
+    .back-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        padding: 10px 20px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 25px;
+        transition: all 0.3s;
+    }
+
+    .back-btn:hover {
+        background: rgba(255,255,255,0.2);
+    }
+
+    /* Contenedor principal */
+    .share-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 200px);
+        padding: 40px 20px;
+    }
+
+    .share-card {
+        background: linear-gradient(145deg, var(--bg-card), #1a1a1a);
+        border-radius: 24px;
+        padding: 50px 40px;
+        text-align: center;
+        max-width: 420px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.05);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .share-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--accent-pink), #8b5cf6, var(--accent-pink));
+        background-size: 200% 100%;
+        animation: gradient 3s ease infinite;
+    }
+
+    @keyframes gradient {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    .share-cover {
+        width: 260px;
+        height: 260px;
+        border-radius: 16px;
+        object-fit: cover;
+        margin: 0 auto 30px;
+        box-shadow: 0 15px 40px rgba(255, 20, 147, 0.3);
+        transition: transform 0.3s;
+    }
+
+    .share-cover:hover {
+        transform: scale(1.02);
+    }
+
+    .share-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0 0 10px;
+        line-height: 1.2;
+    }
+
+    .share-artist {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        margin: 0 0 25px;
+    }
+
+    .share-duration {
+        display: inline-block;
+        background: rgba(255,255,255,0.1);
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 30px;
+    }
+
+    .share-play-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        padding: 16px 30px;
+        background: var(--accent-pink);
+        border: none;
+        border-radius: 30px;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 20px;
+    }
+
+    .share-play-btn:hover {
+        background: var(--accent-pink-hover);
+        transform: scale(1.02);
+        box-shadow: 0 10px 30px rgba(255, 20, 147, 0.4);
+    }
+
+    .share-play-btn span {
+        font-size: 20px;
+    }
+
+    /* Share Actions */
+    .share-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 25px;
+        padding-top: 25px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .share-action-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255,255,255,0.1);
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .share-action-btn:hover {
+        background: var(--accent-pink);
+        transform: translateY(-3px);
+    }
+
+    .share-action-btn.whatsapp:hover { background: #25D366; }
+    .share-action-btn.twitter:hover { background: #1DA1F2; }
+    .share-action-btn.facebook:hover { background: #4267B2; }
+    .share-action-btn.copy:hover { background: var(--accent-pink); }
+
+    /* URL Copy */
+    .share-url-container {
+        display: flex;
+        gap: 10px;
+        margin-top: 25px;
+        background: var(--bg-dark);
+        padding: 10px;
+        border-radius: 12px;
+    }
+
+    .share-url-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 13px;
+        outline: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .share-copy-btn {
+        padding: 8px 16px;
+        background: var(--accent-pink);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        white-space: nowrap;
+    }
+
+    .share-copy-btn:hover {
+        background: var(--accent-pink-hover);
+    }
+
+    /* QR Code */
+    .qr-section {
+        margin-top: 30px;
+        padding-top: 25px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .qr-toggle {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.2);
+        color: var(--text-secondary);
+        padding: 10px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.3s;
+    }
+
+    .qr-toggle:hover {
+        border-color: var(--accent-pink);
+        color: var(--accent-pink);
+    }
+
+    .qr-container {
+        display: none;
+        margin-top: 20px;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .qr-container.active {
+        display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+        .share-card {
+            padding: 30px 20px;
+        }
+
+        .share-cover {
+            width: 200px;
+            height: 200px;
+        }
+
+        .share-title {
+            font-size: 1.4rem;
+        }
+
+        .share-actions {
+            gap: 10px;
+        }
+
+        .share-action-btn {
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<!-- Header -->
+<div class="header">
+    <a href="{% url 'lista_reproduccion' %}" class="back-btn">
+        ← Volver al inicio
+    </a>
+    <div></div>
+</div>
+
+<!-- Contenido -->
+<div class="share-container">
+    <div class="share-card">
+        <img src="{{ portada }}" alt="{{ cancion.titulo }}" class="share-cover">
+        
+        <h1 class="share-title">{{ cancion.titulo }}</h1>
+        <p class="share-artist">{{ artista }}</p>
+        
+        <span class="share-duration">⏱️ {{ cancion.duracion }}</span>
+        
+        <button class="share-play-btn" onclick="reproducirCancion('{{ cancion.id }}')">
+            <span>▶️</span> Reproducir ahora
+        </button>
+        
+        <!-- Botones de compartir -->
+        <div class="share-actions">
+            <button class="share-action-btn whatsapp" onclick="compartirWhatsApp()" title="WhatsApp">
+                📱
+            </button>
+            <button class="share-action-btn twitter" onclick="compartirTwitter()" title="Twitter">
+                🐦
+            </button>
+            <button class="share-action-btn facebook" onclick="compartirFacebook()" title="Facebook">
+                📘
+            </button>
+            <button class="share-action-btn copy" onclick="copiarEnlace()" title="Copiar enlace">
+                📋
+            </button>
+        </div>
+        
+        <!-- URL para copiar -->
+        <div class="share-url-container">
+            <input type="text" class="share-url-input" id="shareUrl" value="{{ share_url }}" readonly>
+            <button class="share-copy-btn" onclick="copiarEnlace()">Copiar</button>
+        </div>
+        
+        <!-- QR Code -->
+        <div class="qr-section">
+            <button class="qr-toggle" onclick="toggleQR()">📷 Mostrar código QR</button>
+            <div class="qr-container" id="qrContainer">
+                <div id="qrCode"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script data-page-script>
+(function() {
+    
+    var shareUrl = '{{ share_url }}';
+    var songTitle = '{{ cancion.titulo|escapejs }}';
+    var artistName = '{{ artista|escapejs }}';
+    var qrGenerated = false;
+    
+    // ========== COMPARTIR EN REDES ==========
+    window.compartirWhatsApp = function() {
+        var text = '🎵 Escucha "' + songTitle + '" de ' + artistName + ' en MuuuSica: ' + shareUrl;
+        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    };
+    
+    window.compartirTwitter = function() {
+        var text = '🎵 Escuchando "' + songTitle + '" de ' + artistName + ' en @MuuuSica';
+        window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(shareUrl), '_blank');
+    };
+    
+    window.compartirFacebook = function() {
+        window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl), '_blank');
+    };
+    
+    window.copiarEnlace = function() {
+        var input = document.getElementById('shareUrl');
+        input.select();
+        
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(shareUrl).then(function() {
+                mostrarMensaje('¡Enlace copiado!');
+            });
+        } else {
+            document.execCommand('copy');
+            mostrarMensaje('¡Enlace copiado!');
+        }
+    };
+    
+    // ========== QR CODE ==========
+    window.toggleQR = function() {
+        var container = document.getElementById('qrContainer');
+        container.classList.toggle('active');
+        
+        if (!qrGenerated && container.classList.contains('active')) {
+            new QRCode(document.getElementById('qrCode'), {
+                text: shareUrl,
+                width: 150,
+                height: 150,
+                colorDark: '#000000',
+                colorLight: '#ffffff'
+            });
+            qrGenerated = true;
+        }
+    };
+    
+    // ========== MOSTRAR MENSAJE ==========
+    function mostrarMensaje(msg) {
+        if (typeof showToast === 'function') {
+            showToast(msg, 'success');
+        } else {
+            // Fallback toast
+            var toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:12px 24px;border-radius:8px;z-index:9999;';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 3000);
+        }
+    }
+    
+    console.log('✅ Página de compartir cargada');
+    
+})();
+</script>
+{% endblock %}

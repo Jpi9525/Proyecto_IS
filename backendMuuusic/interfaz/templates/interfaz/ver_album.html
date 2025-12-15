@@ -1,0 +1,287 @@
+{% extends 'interfaz/base_player.html' %}
+{% load static %}
+
+{% block title %}{{ album.titulo }} - MuuuSica{% endblock %}
+
+{% block extra_css %}
+<style>       
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+        .back-btn:hover { background: var(--accent-pink); }
+        
+        .album-header {
+            background: linear-gradient(180deg, rgba(255,20,147,0.4) 0%, var(--bg-dark) 100%);
+            padding: 80px 40px 40px;
+            display: flex;
+            align-items: flex-end;
+            gap: 30px;
+        }
+        .album-cover {
+            width: 230px;
+            height: 230px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+        }
+        .album-cover img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .album-info h1 { font-size: 48px; margin-bottom: 10px; }
+        .album-meta { color: var(--text-secondary); font-size: 14px; }
+        .album-meta span { color: white; font-weight: 600; }
+        
+        .actions {
+            padding: 25px 40px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .play-all-btn {
+            width: 56px;
+            height: 56px;
+            background: var(--accent-pink);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .play-all-btn:hover { transform: scale(1.1); }
+        
+        .shuffle-btn {
+            background: transparent;
+            border: 1px solid var(--text-secondary);
+            color: var(--text-secondary);
+            padding: 10px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .shuffle-btn:hover {
+            border-color: white;
+            color: white;
+        }
+        
+        .songs-container { padding: 0 40px 40px; }
+        
+        .songs-header {
+            display: grid;
+            grid-template-columns: 50px 1fr 80px;
+            gap: 15px;
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .song-row {
+            display: grid;
+            grid-template-columns: 50px 1fr 80px;
+            gap: 15px;
+            align-items: center;
+            padding: 15px;
+            border-radius: 8px;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
+        .song-row:hover { background: var(--bg-card-hover); }
+        .song-row:hover .song-num { display: none; }
+        .song-row:hover .play-icon { display: block; }
+        .song-row.playing { background: rgba(255,20,147,0.2); }
+        
+        .song-num { color: var(--text-secondary); text-align: center; }
+        .play-icon { display: none; color: white; text-align: center; cursor: pointer; }
+        
+        .song-info h4 { font-size: 16px; font-weight: 400; margin-bottom: 4px; }
+        .song-info p { font-size: 14px; color: var(--text-secondary); }
+        
+        .song-duration { color: var(--text-secondary); text-align: right; font-size: 14px; }
+        
+        .empty { text-align: center; padding: 60px; color: var(--text-secondary); }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            z-index: 3000;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .toast.success { border-left: 4px solid #00c853; }
+        .toast.error { border-left: 4px solid #ff1744; }
+
+        .download-album-btn.downloaded {
+            background: #1db954;
+            border-color: #1db954;
+            color: white;
+        }
+        @media (max-width: 768px) {
+            .album-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: 60px 20px 30px;
+            }
+            .album-cover { width: 180px; height: 180px; }
+            .album-info h1 { font-size: 28px; }
+            .songs-container { padding: 0 20px 40px; }
+            .actions { padding: 20px; justify-content: center; }
+            .player { padding: 0 15px; }
+            .now-playing-info { min-width: 100px; }
+        }
+</style>
+{% endblock %}
+
+{% block content %}
+    <button class="back-btn" onclick="history.back()">←</button>
+
+    <div class="album-header">
+        <div class="album-cover">
+            <img src="{{ album.portada }}" alt="{{ album.titulo }}">
+        </div>
+        <div class="album-info">
+            <p style="font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">ÁLBUM</p>
+            <h1>{{ album.titulo }}</h1>
+            <p class="album-meta">
+                <span>{{ album.artista }}</span> • 
+                {% if album.fecha %}{{ album.fecha|date:"Y" }} • {% endif %}
+                {{ total_canciones }} canciones
+            </p>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="play-all-btn" id="playAllBtn" title="Reproducir todo">▶</button>
+        <button class="shuffle-btn" id="shuffleBtn">🔀 Aleatorio</button>
+        <button class="shuffle-btn download-album-btn" id="downloadAlbumBtn" data-album-id="{{ album.id }}">📥 Descargar</button>
+    </div>
+
+    <div class="songs-container">
+        {% if canciones %}
+        <div class="songs-header">
+            <span>#</span>
+            <span>Título</span>
+            <span>⏱</span>
+        </div>
+        {% endif %}
+
+        {% for cancion in canciones %}
+        <div class="song-row" data-id="{{ cancion.id }}" data-ruta="{{ cancion.ruta_archivo }}" data-titulo="{{ cancion.titulo }}" data-artista="{{ cancion.artista }}" data-portada="{{ album.portada }}">
+            <div>
+                <span class="song-num">{{ forloop.counter }}</span>
+                <span class="play-icon">▶</span>
+            </div>
+            <div class="song-info">
+                <h4>{{ cancion.titulo }}</h4>
+                <p>{{ cancion.artista }}</p>
+            </div>
+            <div class="song-duration">{{ cancion.duracion }}</div>
+        </div>
+        {% empty %}
+        <div class="empty">
+            <p>No hay canciones en este álbum</p>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script>
+(function () {
+
+    document.getElementById('playAllBtn')?.addEventListener('click', function() {
+        const firstRow = document.querySelector('.song-row');
+        if (firstRow && typeof reproducirCancion === 'function') {
+            reproducirCancion(firstRow.dataset.id);
+        } else {
+            showToast('No hay canciones para reproducir', 'error');
+        }
+    });
+
+    // Shuffle del header
+    document.getElementById('shuffleBtn')?.addEventListener('click', function() {
+        const rows = document.querySelectorAll('.song-row');
+        if (rows.length > 0 && typeof reproducirCancion === 'function') {
+            const randomIndex = Math.floor(Math.random() * rows.length);
+            reproducirCancion(rows[randomIndex].dataset.id);
+            showToast('🔀 Reproduciendo aleatoriamente');
+        }
+    });
+
+    // Descargar álbum completo
+    document.getElementById('downloadAlbumBtn')?.addEventListener('click', async function() {
+        const albumId = this.dataset.albumId;
+        
+        try {
+            const response = await fetch('/api/descargar/album/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ album_id: albumId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                if (data.descargado) {
+                    this.innerHTML = '✅ Descargado';
+                    this.classList.add('downloaded');
+                } else {
+                    this.innerHTML = '📥 Descargar';
+                    this.classList.remove('downloaded');
+                }
+                showToast(data.message);
+            } else {
+                showToast(data.message || 'Error', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Error de conexión', 'error');
+        }
+    });
+
+    // Click en filas de canciones para reproducir
+    document.querySelectorAll('.song-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('button')) return;
+            
+            const songId = this.dataset.id;
+            if (songId && typeof reproducirCancion === 'function') {
+                reproducirCancion(songId);
+            }
+        });
+    });
+
+    console.log('✅ Ver álbum inicializado');
+
+})();
+</script>
+{% endblock %}
