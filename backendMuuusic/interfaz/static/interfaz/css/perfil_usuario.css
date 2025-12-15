@@ -1,0 +1,719 @@
+/* ========== PERFIL USUARIO - MUUUSIC ========== */
+
+/* ========== CONTENIDO PRINCIPAL ========== */
+.main-content {
+    padding: 30px 40px 160px !important;
+}
+
+/* ========== PERFIL HEADER ========== */
+.profile-header {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 40px !important;
+    align-items: flex-end !important;
+    margin-bottom: 40px !important;
+    flex-wrap: wrap !important;
+}
+
+.avatar {
+    width: 200px !important;
+    height: 200px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8) !important;
+    background: #121212 !important;
+    border: 4px solid #121212 !important;
+    flex-shrink: 0 !important;
+}
+
+.avatar-placeholder {
+    width: 200px !important;
+    height: 200px !important;
+    border-radius: 50% !important;
+    background: #121212 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 80px !important;
+    color: #b3b3b3 !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8) !important;
+    border: 4px solid #121212 !important;
+    flex-shrink: 0 !important;
+}
+
+.profile-info {
+    flex: 1 !important;
+    min-width: 300px !important;
+}
+
+.profile-label {
+    color: #f3487d !important;
+    font-weight: bold !important;
+    letter-spacing: 1px !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    display: block !important;
+    margin-bottom: 5px !important;
+}
+
+.profile-label.label-artista {
+    color: #e3a0b6 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.profile-name {
+    font-size: 3.5rem !important;
+    font-weight: 800 !important;
+    margin: 10px 0 !important;
+    line-height: 1 !important;
+    letter-spacing: -2px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    flex-wrap: wrap !important;
+    color: #ffffff !important;
+}
+
+.artist-badge {
+    color: #e3a0b6 !important;
+    font-size: 1.2rem !important;
+}
+
+.profile-bio {
+    color: #b3b3b3 !important;
+    font-size: 1rem !important;
+    max-width: 600px !important;
+    line-height: 1.5 !important;
+}
+
+.profile-socials {
+    margin-top: 20px !important;
+    display: flex !important;
+    gap: 15px !important;
+    flex-wrap: wrap !important;
+}
+
+.social-link {
+    width: 40px !important;
+    height: 40px !important;
+    background: #121212 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #b3b3b3 !important;
+    text-decoration: none !important;
+    font-size: 18px !important;
+    transition: all 0.3s !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+.social-link:hover {
+    background: #f3487d !important;
+    color: white !important;
+    transform: translateY(-3px) !important;
+}
+
+/* ========== PROFILE ACTIONS ========== */
+.profile-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 15px !important;
+    margin-left: auto !important;
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+}
+
+.profile-actions .action-btn,
+.anthem-header .action-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 12px 24px !important;
+    border-radius: 30px !important;
+    background: #121212 !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: white !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+    white-space: nowrap !important;
+}
+
+.profile-actions .action-btn:hover,
+.anthem-header .action-btn:hover {
+    background: #1e1e1e !important;
+    border-color: rgba(255,255,255,0.3) !important;
+    transform: scale(1.05) !important;
+}
+
+.profile-actions .action-btn.primary {
+    background: #f3487d !important;
+    border: none !important;
+}
+
+.profile-actions .action-btn.primary:hover {
+    background: #d2587c !important;
+    box-shadow: 0 5px 20px rgba(243, 72, 125, 0.4) !important;
+}
+
+/* ========== BOTONES ESPECIALES ========== */
+.btn-verify-artist {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 12px 24px !important;
+    border-radius: 30px !important;
+    background: linear-gradient(135deg, #aa4d68, #d2587c) !important;
+    border: none !important;
+    color: white !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.btn-verify-artist:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 5px 20px rgba(170, 77, 104, 0.4) !important;
+}
+
+.btn-upload-music {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 12px 24px !important;
+    border-radius: 30px !important;
+    background: #aa4d68 !important;
+    border: none !important;
+    color: white !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+.btn-upload-music:hover {
+    background: #d2587c !important;
+    transform: scale(1.05) !important;
+}
+
+/* ========== SECCIONES ========== */
+.section-divider {
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    margin: 40px 0 25px !important;
+}
+
+.section-divider h3 {
+    margin: 0 !important;
+    font-size: 20px !important;
+    color: #ffffff !important;
+    white-space: nowrap !important;
+}
+
+.section-divider::after {
+    content: '' !important;
+    flex: 1 !important;
+    height: 1px !important;
+    background: rgba(255,255,255,0.1) !important;
+}
+
+/* ========== ANTHEM SECTION ========== */
+.anthem-section {
+    background: linear-gradient(135deg, rgba(243, 72, 125, 0.08), rgba(170, 77, 104, 0.08)) !important;
+    border-radius: 16px !important;
+    padding: 25px !important;
+    margin-bottom: 30px !important;
+    border: 1px solid rgba(243, 72, 125, 0.2) !important;
+}
+
+.anthem-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 20px !important;
+    flex-wrap: wrap !important;
+}
+
+.anthem-cover {
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 10px !important;
+    object-fit: cover !important;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3) !important;
+    flex-shrink: 0 !important;
+}
+
+.anthem-info {
+    flex: 1 !important;
+    min-width: 200px !important;
+}
+
+.anthem-info h4 {
+    margin: 0 0 5px !important;
+    font-size: 18px !important;
+    color: #ffffff !important;
+}
+
+.anthem-info p {
+    margin: 0 !important;
+    color: #f3487d !important;
+    font-size: 13px !important;
+}
+
+/* ========== GRID DE CANCIONES ========== */
+.songs-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 20px !important;
+}
+
+.songs-grid .song-card {
+    background: #121212 !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    display: flex !important;
+    gap: 15px !important;
+    align-items: center !important;
+    transition: all 0.3s !important;
+    cursor: pointer !important;
+    border: 1px solid transparent !important;
+}
+
+.songs-grid .song-card:hover {
+    background: #1e1e1e !important;
+    transform: translateY(-5px) !important;
+    border-color: rgba(243, 72, 125, 0.3) !important;
+}
+
+.song-card-icon {
+    width: 50px !important;
+    height: 50px !important;
+    background: linear-gradient(135deg, #f3487d, #d2587c) !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+    color: white !important;
+    flex-shrink: 0 !important;
+}
+
+.song-card-info {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.song-card-info h4 {
+    margin: 0 0 5px !important;
+    font-size: 15px !important;
+    color: #ffffff !important;
+}
+
+.song-card-info p {
+    margin: 0 !important;
+    color: #b3b3b3 !important;
+    font-size: 13px !important;
+}
+
+/* ========== GRID DE RESEÑAS ========== */
+.reviews-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+    gap: 20px !important;
+}
+
+.review-card {
+    background: #121212 !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    display: flex !important;
+    gap: 15px !important;
+    transition: all 0.3s !important;
+    border: 1px solid transparent !important;
+}
+
+.review-card:hover {
+    background: #1e1e1e !important;
+    transform: translateY(-3px) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+}
+
+.review-cover {
+    width: 70px !important;
+    height: 70px !important;
+    border-radius: 8px !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+}
+
+.review-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.review-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 5px !important;
+}
+
+.review-song-title {
+    color: white !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    font-size: 15px !important;
+}
+
+.review-song-title:hover {
+    color: #e3a0b6 !important;
+}
+
+.review-date {
+    color: #b3b3b3 !important;
+    font-size: 11px !important;
+}
+
+.review-stars {
+    color: #ffd700 !important;
+    font-size: 13px !important;
+    margin-bottom: 8px !important;
+}
+
+.review-text {
+    color: #b3b3b3 !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    font-style: italic !important;
+}
+
+/* ========== EMPTY STATE ========== */
+.empty-state {
+    text-align: center !important;
+    padding: 60px 20px !important;
+    color: #b3b3b3 !important;
+}
+
+.empty-state-icon {
+    font-size: 50px !important;
+    margin-bottom: 20px !important;
+    opacity: 0.5 !important;
+    color: #aa4d68 !important;
+}
+
+.empty-state h3 {
+    margin: 0 0 10px !important;
+    color: white !important;
+}
+
+.empty-state p {
+    margin: 0 !important;
+}
+
+/* ========== MODALES ========== */
+.modal-overlay {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0,0,0,0.85) !important;
+    z-index: 2000 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+    backdrop-filter: blur(5px) !important;
+}
+
+.modal-overlay.active {
+    display: flex !important;
+}
+
+.modal {
+    background: #121212 !important;
+    border-radius: 16px !important;
+    padding: 30px !important;
+    width: 100% !important;
+    max-width: 500px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 25px !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    padding-bottom: 15px !important;
+}
+
+.modal-header h2 {
+    margin: 0 !important;
+    font-size: 20px !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.modal-header h2 i {
+    color: #f3487d !important;
+}
+
+.modal-close {
+    background: none !important;
+    border: none !important;
+    color: #b3b3b3 !important;
+    font-size: 20px !important;
+    cursor: pointer !important;
+}
+
+.modal-close:hover {
+    color: #f3487d !important;
+}
+
+/* ========== FORMULARIOS ========== */
+.form-group {
+    margin-bottom: 20px !important;
+}
+
+.form-group label {
+    display: block !important;
+    margin-bottom: 8px !important;
+    font-size: 13px !important;
+    color: #b3b3b3 !important;
+}
+
+.form-group label.accent {
+    color: #e3a0b6 !important;
+    font-weight: 600 !important;
+}
+
+.form-input {
+    width: 100% !important;
+    padding: 12px 15px !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    background: #080808 !important;
+    color: white !important;
+    font-size: 14px !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+}
+
+.form-input:focus {
+    border-color: #f3487d !important;
+    background: #000 !important;
+}
+
+.form-row {
+    display: flex !important;
+    gap: 15px !important;
+}
+
+.form-row .form-group {
+    flex: 1 !important;
+}
+
+.form-divider {
+    height: 1px !important;
+    background: rgba(255,255,255,0.1) !important;
+    margin: 25px 0 !important;
+}
+
+.form-actions {
+    display: flex !important;
+    gap: 15px !important;
+    justify-content: flex-end !important;
+    margin-top: 25px !important;
+}
+
+.btn-secondary {
+    padding: 10px 20px !important;
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    color: white !important;
+    border-radius: 25px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.05) !important;
+}
+
+.btn-primary {
+    padding: 10px 24px !important;
+    background: #f3487d !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 25px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+.btn-primary:hover {
+    background: #d2587c !important;
+}
+
+/* ========== CHECKBOX ========== */
+.checkbox-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    accent-color: #f3487d !important;
+}
+
+.checkbox-group label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 12px !important;
+    color: #ff6b6b !important;
+    margin: 0 !important;
+}
+
+/* ========== SOCIAL TAGS ========== */
+.social-tags {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    margin-bottom: 20px !important;
+}
+
+.social-tag {
+    background: rgba(255,255,255,0.05) !important;
+    padding: 6px 14px !important;
+    border-radius: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 13px !important;
+}
+
+.social-tag i {
+    color: #f3487d !important;
+}
+
+.social-tag-delete {
+    color: #b3b3b3 !important;
+    text-decoration: none !important;
+    font-size: 12px !important;
+    margin-left: 5px !important;
+}
+
+.social-tag-delete:hover {
+    color: #ff4444 !important;
+}
+
+/* ========== SEARCH DROPDOWN ========== */
+.search-dropdown-container {
+    position: relative !important;
+}
+
+.results-list {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    background: #1a1a1a !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 0 0 8px 8px !important;
+    z-index: 100 !important;
+    display: none;
+}
+
+.results-list.active {
+    display: block !important;
+}
+
+.result-item {
+    padding: 12px 15px !important;
+    cursor: pointer !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+.result-item:hover {
+    background: #f3487d !important;
+    color: white !important;
+}
+
+.result-item strong {
+    display: block !important;
+    font-size: 14px !important;
+}
+
+.result-item small {
+    color: #b3b3b3 !important;
+    font-size: 12px !important;
+}
+
+.clear-selection {
+    display: block !important;
+    text-align: right !important;
+    color: #b3b3b3 !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    margin-top: 8px !important;
+}
+
+.clear-selection:hover {
+    color: #f3487d !important;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .main-content {
+        padding: 20px 20px 160px !important;
+    }
+
+    .profile-header {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    .profile-name {
+        font-size: 2.5rem !important;
+        justify-content: center !important;
+    }
+
+    .profile-actions {
+        margin-left: 0 !important;
+        justify-content: center !important;
+    }
+
+    .avatar, .avatar-placeholder {
+        width: 150px !important;
+        height: 150px !important;
+    }
+
+    .reviews-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .anthem-header {
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+}
+

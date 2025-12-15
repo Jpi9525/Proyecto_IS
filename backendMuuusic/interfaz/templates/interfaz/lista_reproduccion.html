@@ -1,0 +1,327 @@
+{% extends 'interfaz/base_player.html' %}
+{% load static %}
+
+{% block title %}Inicio - MuuuSIC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .songs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 20px;
+    }
+    
+    .song-card {
+        background: var(--bg-card);
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .song-card:hover {
+        background: var(--bg-hover);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+    
+    .card-cover {
+        position: relative;
+        margin-bottom: 12px;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    
+    .card-cover img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        object-fit: cover;
+        display: block;
+    }
+    
+    .card-cover::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+    
+    .song-card:hover .card-cover::after { opacity: 1; }
+    
+    /* ========== BOTONES PRINCIPALES (4 botones) ========== */
+    .card-actions-overlay {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%) translateY(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 10;
+    }
+    
+    .song-card:hover .card-actions-overlay {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    
+    /* Botón Play - pequeño y centrado */
+    .action-play {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--french-rose);
+        border: none;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(243, 72, 125, 0.5);
+        transition: all 0.2s ease;
+        padding: 0;
+    }
+    
+    .action-play:hover {
+        transform: scale(1.12);
+        box-shadow: 0 4px 12px rgba(243, 72, 125, 0.6);
+    }
+    
+    .action-play i {
+        font-size: 12px;
+        margin-left: 1px;
+        line-height: 1;
+    }
+    
+    /* Botones pequeños (favorito, cola, reseña) */
+    .action-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: none;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        padding: 0;
+    }
+    
+    .action-btn i {
+        font-size: 11px;
+        line-height: 1;
+    }
+    
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+    }
+    
+    .action-btn.liked { color: var(--french-rose); }
+    
+    /* ========== MENÚ 3 PUNTOS ========== */
+    .card-menu-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.6);
+        border: none;
+        color: white;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.2s ease;
+        z-index: 15;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .card-menu-btn i {
+        font-size: 11px;
+    }
+    
+    .song-card:hover .card-menu-btn { opacity: 1; }
+    .card-menu-btn:hover { background: rgba(255, 255, 255, 0.2); }
+    
+    /* ========== DROPDOWN ========== */
+    .card-dropdown {
+        position: absolute;
+        top: 38px;
+        right: 8px;
+        background: #282828;
+        border-radius: 8px;
+        padding: 6px 0;
+        min-width: 170px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        display: none;
+    }
+    
+    .card-dropdown.show { display: block; }
+    
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        color: var(--text-main);
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .dropdown-item:hover { background: rgba(255, 255, 255, 0.1); }
+    .dropdown-item i { width: 14px; text-align: center; color: var(--text-muted); font-size: 12px; }
+    .dropdown-item:hover i { color: var(--french-rose); }
+    .dropdown-divider { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 6px 0; }
+    
+    /* ========== INFO ========== */
+    .card-title {
+        margin: 0 0 4px;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .card-artist {
+        margin: 0;
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+    
+    /* ========== HEADER ========== */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 30px;
+    }
+    
+    .page-header h1 {
+        font-size: 32px;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+    
+    .genre-filters { display: flex; gap: 10px; }
+    
+    .genre-filter {
+        background: var(--bg-hover);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 6px 14px;
+        border-radius: 20px;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+    
+    .genre-filter:hover, .genre-filter.active {
+        border-color: var(--french-rose);
+        color: var(--french-rose);
+    }
+    
+    .song-card.playing .card-cover { box-shadow: 0 0 0 2px var(--french-rose); }
+    .song-card.playing .card-title { color: var(--french-rose); }
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<div class="page-header">
+    <div>
+        <h1>Tu Música</h1>
+        <p style="color: var(--text-muted);">{{ total_canciones }} canciones</p>
+    </div>
+    <div class="genre-filters">
+        {% for genero in generos_seleccionados %}
+        <button class="genre-filter" data-genre="{{ genero }}">{{ genero }}</button>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="songs-grid">
+    {% for cancion in canciones %}
+    <div class="song-card" 
+         data-id="{{ cancion.id }}" 
+         data-titulo="{{ cancion.titulo }}"
+         data-artista="{{ cancion.artista }}"
+         data-portada="{{ cancion.portada }}"
+         data-ruta="{{ cancion.ruta_archivo }}"
+         data-liked="{{ cancion.es_favorito|yesno:'true,false' }}"
+         data-downloaded="{{ cancion.es_descargado|yesno:'true,false' }}"
+         data-genre="{{ cancion.genero|default:'' }}">
+        
+        <div class="card-cover">
+            <img src="{{ cancion.portada }}" alt="{{ cancion.titulo }}">
+            
+            <!-- Menú 3 puntos -->
+            <button class="card-menu-btn" title="Más opciones">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
+            
+            <!-- Dropdown (playlist y descargas) -->
+            <div class="card-dropdown">
+                <div class="dropdown-item add-playlist-btn">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Añadir a playlist</span>
+                </div>
+                <div class="dropdown-item download-btn">
+                    <i class="fa-solid {% if cancion.es_descargado %}fa-check{% else %}fa-download{% endif %}"></i>
+                    <span>{% if cancion.es_descargado %}Quitar de descargas{% else %}Descargar offline{% endif %}</span>
+                </div>
+            </div>
+            
+            <!-- 4 Botones: ❤️ ▶️ 📋 💬 -->
+            <div class="card-actions-overlay">
+                <button class="action-btn favorito-btn {% if cancion.es_favorito %}liked{% endif %}" title="Favorito">
+                    <i class="fa-{% if cancion.es_favorito %}solid{% else %}regular{% endif %} fa-heart"></i>
+                </button>
+                
+                <button class="action-play play-btn" title="Reproducir">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+                
+                <button class="action-btn add-queue-btn" title="Añadir a cola">
+                    <i class="fa-solid fa-layer-group"></i>
+                </button>
+                
+                <button class="action-btn resena-btn" title="Ver reseñas">
+                    <i class="fa-regular fa-comment"></i>
+                </button>
+            </div>
+        </div>
+
+        <h4 class="card-title">{{ cancion.titulo }}</h4>
+        <p class="card-artist">{{ cancion.artista }}</p>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+        <i class="fa-solid fa-music" style="font-size: 48px; margin-bottom: 15px; display: block; opacity: 0.5;"></i>
+        <p>No tienes canciones todavía</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'interfaz/js/lista_reproduccion.js' %}"></script>
+{% endblock %}

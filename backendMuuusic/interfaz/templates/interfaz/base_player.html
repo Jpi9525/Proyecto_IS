@@ -1,0 +1,322 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title id="pageTitle">{% block title %}MuuuSIC{% endblock %}</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'interfaz/css/main.css' %}">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- ========== SIDEBAR IZQUIERDO ========== -->
+        <aside class="sidebar" id="mainSidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo">
+                    <img src="{% static 'interfaz/imagenes/Inicio/vaca.png' %}" alt="MuuuSIC" class="logo-img">
+                    <span class="logo-text">
+                        <span style="color: var(--french-rose);">Muuu</span>SIC
+                    </span>
+                </div>
+                <button id="sidebarToggleBtn" class="menu-toggle-btn">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{% url 'lista_reproduccion' %}" class="nav-item" data-page="inicio">
+                    <i class="fa-solid fa-house"></i> <span>Inicio</span>
+                </a>
+                <a href="{% url 'lista_albumes' %}" class="nav-item" data-page="albumes">
+                    <i class="fa-solid fa-compact-disc"></i> <span>Álbumes</span>
+                </a>
+                <a href="{% url 'mis_favoritos' %}" class="nav-item" data-page="favoritos">
+                    <i class="fa-solid fa-heart"></i> <span>Favoritos</span>
+                </a>
+                <a href="{% url 'mis_playlists' %}" class="nav-item" data-page="playlists">
+                    <i class="fa-solid fa-list"></i> <span>Playlists</span>
+                </a>
+                <a href="{% url 'musica_offline' %}" class="nav-item" data-page="offline">
+                    <i class="fa-solid fa-circle-arrow-down"></i> <span>Sin Conexión</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="{% url 'logout' %}" class="nav-item">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span>Salir</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- ========== CONTENIDO PRINCIPAL ========== -->
+        <div class="main-wrapper">
+            
+            <!-- Header Superior -->
+            <header class="top-bar">
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Buscar artista, canción...">
+                </div>
+                
+                <div class="profile-section">
+                    <a href="{% url 'perfil_usuario' %}" class="user-profile-circle">
+                        {% if usuario and usuario.foto_perfil_path %}
+                            <img src="{{ usuario.foto_perfil_path }}" alt="Perfil">
+                        {% else %}
+                            <span>{{ usuario.nombre|slice:":1"|upper|default:"U" }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+            </header>
+
+            <!-- Área de contenido -->
+            <div class="content-row">
+                
+                <main class="main-content-area" id="spaContent">
+                    {% block content %}{% endblock %}
+                </main>
+
+                <!-- ========== SIDEBAR DERECHO ========== -->
+                <aside class="right-sidebar">
+                    <!-- Widget: Ahora Reproduciendo -->
+                    <div class="now-playing-widget empty">
+                        <div class="widget-header">AHORA REPRODUCIENDO</div>
+                        <div class="widget-cover-wrapper">
+                            <img src="{% static 'interfaz/imagenes/Inicio/vaca.png' %}" id="sidePlayerCover" alt="Cover">
+                        </div>
+                        <div class="widget-info">
+                            <h3 id="sidePlayerTitle">Ninguna canción</h3>
+                            <p id="sidePlayerArtist">Selecciona una canción para reproducir</p>
+                        </div>
+                    </div>
+
+                    <!-- Cola de reproducción -->
+                    <div class="queue-section">
+                        <div class="queue-header">
+                            <span>Siguiente</span>
+                            <button id="gClearQueueBtn">Borrar</button>
+                        </div>
+                        <div class="queue-list-container" id="gQueueList">
+                            <div class="queue-empty-state">
+                                <i class="fa-solid fa-music"></i>
+                                <p>La cola está vacía</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Loader SPA -->
+    <div class="spa-loading" id="spaLoading"><div class="spa-spinner"></div></div>
+
+    <!-- ========== REPRODUCTOR FIJO ========== -->
+    <div class="player-bar" id="globalPlayer">
+        <div id="gProgressBar" style="position: absolute; top: -4px; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.1); cursor: pointer; z-index: 200;">
+            <div id="gProgressFill" style="height: 100%; background: var(--french-rose); width: 0%;"></div>
+        </div>
+
+        <div class="controls-left">
+            <i class="fa-solid fa-shuffle" id="gShuffleBtn" title="Aleatorio"></i>
+            <i class="fa-solid fa-backward-step" id="gPrevBtn" title="Anterior"></i>
+            <i class="fa-solid fa-circle-play play-btn" id="gPlayPauseBtn" title="Reproducir"></i>
+            <i class="fa-solid fa-forward-step" id="gNextBtn" title="Siguiente"></i>
+            <div class="time-display">
+                <span id="gCurrentTime">0:00</span> / <span id="gTotalTime">0:00</span>
+            </div>
+        </div>
+
+        <div class="track-center">
+            <div class="album-art" id="gPlayerCover">
+                <i class="fa-solid fa-music"></i>
+            </div>
+            <div class="track-info">
+                <div class="track-title" id="gPlayerTitle">MuuuSIC</div>
+                <div class="track-artist" id="gPlayerArtist">Selecciona una canción</div>
+            </div>
+            <div class="track-actions">
+                <button class="action-btn heart-btn" id="gPlayerLikeBtn" title="Favorito">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+                <button class="action-btn" id="gPlayerReviewBtn" title="Reseñas">
+                    <i class="fa-regular fa-comment"></i>
+                </button>
+                <button class="action-btn" id="gPlayerShareBtn" title="Compartir">
+                    <i class="fa-solid fa-share-nodes"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="controls-right">
+            <button class="action-btn" id="gQueueBtn" title="Cola">
+                <i class="fa-solid fa-list-ul"></i>
+            </button>
+            <div class="volume-wrapper">
+                <i class="fa-solid fa-volume-high" id="gVolumeBtn"></i>
+                <div class="volume-slider" id="gVolumeBar">
+                    <div class="volume-fill" id="gVolumeFill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL DE RESEÑAS ========== -->
+    <div class="modal-overlay-global" id="globalReviewModal">
+        <div class="modal-global" style="max-width: 550px;">
+            <div class="modal-header-global">
+                <h2><i class="fa-solid fa-star" style="color: #ffd700;"></i> Reseñas</h2>
+                <button class="modal-close-global" id="closeGlobalReviewModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                <img id="gReviewSongCover" src="" alt="" style="width: 70px; height: 70px; border-radius: 6px; object-fit: cover;">
+                <div>
+                    <h3 id="gReviewSongTitle" style="font-size: 16px; margin-bottom: 4px;">Canción</h3>
+                    <p id="gReviewSongArtist" style="color: var(--text-muted); font-size: 14px;">Artista</p>
+                </div>
+            </div>
+            
+            <div class="rating-overview-global">
+                <div style="text-align: center;">
+                    <div class="rating-number-global" id="gRatingPromedio">0.0</div>
+                    <div id="gRatingStarsBig" style="color: #ffd700; font-size: 14px;">☆☆☆☆☆</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                        <span id="gTotalRatings">0</span> valoraciones
+                    </div>
+                </div>
+                <div style="flex: 1; padding-left: 20px;">
+                    {% for i in "54321" %}
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <span style="width: 15px; font-size: 11px;">{{ i }}</span>
+                        <div style="flex: 1; height: 6px; background: #333; border-radius: 3px; overflow: hidden;">
+                            <div id="gBar{{ i }}" style="height: 100%; background: #ffd700; width: 0%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="your-rating-section" style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Tu calificación:</p>
+                <div class="rating-input-global" id="gRatingInput" style="display: flex; justify-content: center; gap: 8px; font-size: 28px; margin-bottom: 15px; cursor: pointer;">
+                    <span class="star-input" data-rating="1">☆</span>
+                    <span class="star-input" data-rating="2">☆</span>
+                    <span class="star-input" data-rating="3">☆</span>
+                    <span class="star-input" data-rating="4">☆</span>
+                    <span class="star-input" data-rating="5">☆</span>
+                </div>
+                <textarea class="comment-input-global" id="gCommentInput" placeholder="Escribe tu opinión (opcional)..." style="width: 100%; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: white; padding: 12px; min-height: 80px; resize: vertical; font-family: inherit;"></textarea>
+                <button class="submit-review-btn" id="gSubmitReviewBtn">
+                    <i class="fa-solid fa-paper-plane"></i> Publicar reseña
+                </button>
+            </div>
+            
+            <div style="margin-top: 25px;">
+                <h4 id="gReviewsCount" style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">0 reseñas</h4>
+                <div id="gReviewsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL DE COMPARTIR ========== -->
+    <div class="share-modal-overlay" id="gShareModal">
+        <div class="share-modal-card">
+            <button class="share-close-btn" id="gCloseShareModal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="modal-cover-wrapper">
+                <div class="modal-cover-glow"></div>
+                <img src="" alt="Cover" id="gShareCover" class="modal-cover-img">
+            </div>
+
+            <h2 id="gShareTitle" class="modal-share-title">Título</h2>
+            <p id="gShareArtist" class="modal-share-artist">Artista</p>
+
+            <div class="modal-url-container">
+                <input type="text" id="gShareInput" readonly>
+                <button id="gShareCopyBtn" class="modal-copy-btn">
+                    <i class="fa-regular fa-copy"></i> Copiar
+                </button>
+            </div>
+
+            <div class="modal-qr-section">
+                <button id="gShareToggleQR" class="modal-qr-toggle">Ver código QR</button>
+                <div id="gShareQRContainer" class="modal-qr-box" style="display: none;">
+                    <div id="gShareQRCode"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL COLA (legacy) ========== -->
+    <div class="modal-overlay-global" id="gQueueModal" style="display:none;"></div>
+    
+    <!-- Audio y Toast -->
+    <audio id="gAudioPlayer"></audio>
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="{% static 'interfaz/js/global_player.js' %}"></script>
+    
+    <!-- Script de navegación activa -->
+    <script>
+    (function() {
+        function actualizarNavActiva() {
+            var path = window.location.pathname;
+            document.querySelectorAll('.sidebar-nav .nav-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+            
+            var activeItem = null;
+            if (path === '/' || path.includes('lista') || path.includes('inicio') || path.includes('reproduccion')) {
+                activeItem = document.querySelector('.nav-item[data-page="inicio"]');
+            } else if (path.includes('album')) {
+                activeItem = document.querySelector('.nav-item[data-page="albumes"]');
+            } else if (path.includes('favorito')) {
+                activeItem = document.querySelector('.nav-item[data-page="favoritos"]');
+            } else if (path.includes('playlist')) {
+                activeItem = document.querySelector('.nav-item[data-page="playlists"]');
+            } else if (path.includes('offline') || path.includes('descargas') || path.includes('sin-conexion')) {
+                activeItem = document.querySelector('.nav-item[data-page="offline"]');
+            }
+            
+            if (activeItem) activeItem.classList.add('active');
+        }
+        
+        actualizarNavActiva();
+        window.addEventListener('popstate', actualizarNavActiva);
+        
+        var spaContent = document.getElementById('spaContent');
+        if (spaContent) {
+            new MutationObserver(function() {
+                setTimeout(actualizarNavActiva, 100);
+            }).observe(spaContent, { childList: true });
+        }
+        
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar-nav .nav-item').forEach(function(i) {
+                    i.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    })();
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+    
+</body>
+</html>

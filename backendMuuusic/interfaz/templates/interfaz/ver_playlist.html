@@ -1,0 +1,265 @@
+{% extends 'interfaz/base_player.html' %}
+{% load static %}
+
+{% block title %}{{ playlist.nombre }} - MuuuSica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .back-btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: rgba(0,0,0,0.7);
+        border: none;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 20px;
+        z-index: 100;
+        transition: all 0.3s;
+    }
+    .back-btn:hover { background: var(--accent-pink); }
+    
+    .playlist-header {
+        background: linear-gradient(180deg, rgba(255,20,147,0.4) 0%, var(--bg-dark) 100%);
+        padding: 80px 40px 40px;
+        display: flex;
+        align-items: flex-end;
+        gap: 30px;
+    }
+    .playlist-cover {
+        width: 230px;
+        height: 230px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        flex-shrink: 0;
+        background: linear-gradient(135deg, var(--accent-pink), #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 80px;
+    }
+    .playlist-cover img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .playlist-info { flex: 1; }
+    .playlist-info .type {
+        font-size: 12px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        color: var(--text-secondary);
+    }
+    .playlist-info h1 { font-size: 48px; margin-bottom: 15px; }
+    .playlist-meta { color: var(--text-secondary); font-size: 14px; }
+    .playlist-meta span { color: white; font-weight: 600; }
+    
+    .actions {
+        padding: 25px 40px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+    .play-all-btn {
+        width: 56px;
+        height: 56px;
+        background: var(--accent-pink);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .play-all-btn:hover { transform: scale(1.1); }
+    
+    .shuffle-btn {
+        background: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+        padding: 10px 25px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .shuffle-btn:hover {
+        border-color: white;
+        color: white;
+    }
+    
+    .songs-container { padding: 0 40px 40px; }
+    
+    .songs-header {
+        display: grid;
+        grid-template-columns: 50px 60px 1fr 150px 80px;
+        gap: 15px;
+        padding: 10px 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 10px;
+        color: var(--text-secondary);
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+    
+    .song-row {
+        display: grid;
+        grid-template-columns: 50px 60px 1fr 150px 80px;
+        gap: 15px;
+        align-items: center;
+        padding: 12px 15px;
+        border-radius: 8px;
+        transition: background 0.3s;
+        cursor: pointer;
+    }
+    .song-row:hover { background: var(--bg-card-hover); }
+    .song-row:hover .song-num { display: none; }
+    .song-row:hover .play-icon { display: block; }
+    .song-row.playing, .song-row.active { background: rgba(255,20,147,0.2); }
+    
+    .song-num { color: var(--text-secondary); text-align: center; }
+    .play-icon { display: none; color: white; text-align: center; }
+    
+    .song-cover-small {
+        width: 50px;
+        height: 50px;
+        border-radius: 4px;
+        overflow: hidden;
+        background: #404040;
+    }
+    .song-cover-small img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .song-info h4 { font-size: 16px; font-weight: 400; margin-bottom: 4px; }
+    .song-info p { font-size: 14px; color: var(--text-secondary); }
+    
+    .song-album { color: var(--text-secondary); font-size: 14px; }
+    .song-duration { color: var(--text-secondary); text-align: right; font-size: 14px; }
+    
+    .empty-state {
+        text-align: center;
+        padding: 80px;
+        color: var(--text-secondary);
+    }
+    .empty-state span { font-size: 80px; display: block; margin-bottom: 20px; }
+
+    @media (max-width: 768px) {
+        .playlist-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 60px 20px 30px;
+        }
+        .playlist-cover { width: 180px; height: 180px; font-size: 60px; }
+        .playlist-info h1 { font-size: 28px; }
+        .songs-header { display: none; }
+        .song-row {
+            grid-template-columns: 50px 50px 1fr 60px;
+        }
+        .song-album { display: none; }
+        .songs-container { padding: 0 20px 40px; }
+        .actions { padding: 20px; justify-content: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <button class="back-btn" onclick="history.back()">←</button>
+
+    <div class="playlist-header">
+        <div class="playlist-cover">
+            {% if playlist.portada and 'placeholder' not in playlist.portada %}
+                <img src="{{ playlist.portada }}" alt="{{ playlist.nombre }}">
+            {% else %}
+                🎵
+            {% endif %}
+        </div>
+        <div class="playlist-info">
+            <p class="type">
+                Playlist {% if playlist.es_publica %}• Pública{% else %}• Privada{% endif %}
+            </p>
+            <h1>{{ playlist.nombre }}</h1>
+            <p class="playlist-meta">
+                <span>{{ total_canciones }}</span> canciones
+                {% if playlist.fecha %} • Creada {{ playlist.fecha|date:"d M Y" }}{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="play-all-btn" id="playAllBtn" title="Reproducir todo">▶</button>
+        <button class="shuffle-btn" id="shuffleBtnPage">🔀 Aleatorio</button>
+    </div>
+
+    <div class="songs-container">
+        {% if canciones %}
+        <div class="songs-header">
+            <span>#</span>
+            <span></span>
+            <span>Título</span>
+            <span>Álbum</span>
+            <span>⏱</span>
+        </div>
+        {% endif %}
+
+        {% for cancion in canciones %}
+        <div class="song-row" 
+             data-id="{{ cancion.id }}" 
+             data-ruta="{{ cancion.ruta_archivo }}" 
+             data-titulo="{{ cancion.titulo }}" 
+             data-artista="{{ cancion.artista }}" 
+             data-portada="{{ cancion.portada }}">
+            <div>
+                <span class="song-num">{{ forloop.counter }}</span>
+                <span class="play-icon">▶</span>
+            </div>
+            <div class="song-cover-small">
+                <img src="{{ cancion.portada }}" alt="{{ cancion.titulo }}">
+            </div>
+            <div class="song-info">
+                <h4>{{ cancion.titulo }}</h4>
+                <p>{{ cancion.artista }}</p>
+            </div>
+            <div class="song-album">{{ cancion.album }}</div>
+            <div class="song-duration">{{ cancion.duracion }}</div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <span>🎵</span>
+            <p>Esta playlist está vacía</p>
+            <p style="margin-top: 10px; font-size: 14px;">Agrega canciones desde tu lista de reproducción</p>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script>
+(function () {
+
+    // Play All
+    document.getElementById('playAllBtn')?.addEventListener('click', function() {
+        const firstRow = document.querySelector('.song-row');
+        if (firstRow && typeof reproducirCancion === 'function') {
+            reproducirCancion(firstRow.dataset.id);
+        } else if (typeof showToast === 'function') {
+            showToast('No hay canciones para reproducir', 'error');
+        }
+    });
+
+    // Shuffle de la página
+    document.getElementById('shuffleBtnPage')?.addEventListener('click', function() {
+        const rows = document.querySelectorAll('.song-row');
+        if (rows.length > 0 && typeof reproducirCancion === 'function') {
+            const randomIndex = Math.floor(Math.random() * rows.length);
+            reproducirCancion(rows[randomIndex].dataset.id);
+            if (typeof showToast === 'function') {
+                showToast('🔀 Reproduciendo aleatoriamente');
+            }
+        }
+    });
+
+    console.log('✅ ver_playlist.html inicializado');
+
+})();
+</script>
+{% endblock %}

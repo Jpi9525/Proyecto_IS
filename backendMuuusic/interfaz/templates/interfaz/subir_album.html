@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Subir Música | MuuuSica</title>
+    <style>
+        body { background: #121212; color: white; padding: 40px; font-family: sans-serif; }
+        .upload-container { max-width: 800px; margin: 0 auto; background: #1e1e1e; padding: 30px; border-radius: 15px; border: 1px solid #333; }
+        
+        h2 { color: #ff1493; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        
+        .form-section { margin-bottom: 30px; padding: 20px; background: #252525; border-radius: 10px; }
+        .form-section h3 { margin-top: 0; font-size: 1.1rem; color: #ddd; }
+        
+        label { display: block; margin-bottom: 8px; color: #aaa; font-size: 0.9rem; }
+        input[type="text"], select { width: 100%; padding: 10px; background: #121212; border: 1px solid #444; color: white; border-radius: 5px; margin-bottom: 15px; box-sizing: border-box; }
+        input[type="file"] { margin-bottom: 15px; color: #ddd; }
+        
+        .checkbox-container { display: flex; align-items: center; gap: 10px; background: #2a2a2a; padding: 10px; border-radius: 5px; border: 1px solid #1db954; }
+        .checkbox-container input { width: auto; margin: 0; }
+        .checkbox-container label { margin: 0; color: white; cursor: pointer; }
+        
+        .song-item { border-top: 1px solid #444; padding-top: 15px; margin-top: 15px; display: flex; gap: 15px; align-items: flex-start; }
+        .song-inputs { flex: 1; }
+        .song-inputs input { margin-bottom: 10px; }
+        .btn-remove { background: #e91429; border: none; color: white; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+        .btn-remove:hover { background: #ff4444; }
+        
+        .btn-add { background: #333; color: white; border: 1px solid #555; padding: 10px 20px; border-radius: 20px; cursor: pointer; display: block; margin: 20px auto; }
+        .btn-add:hover { background: #444; }
+        
+        .btn-submit { background: #ff1493; color: white; border: none; padding: 15px 40px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; width: 100%; margin-top: 20px; }
+        .btn-submit:hover { background: #ff69b4; transform: scale(1.02); }
+        
+        .btn-cancel { display: block; text-align: center; margin-top: 15px; color: #aaa; text-decoration: none; }
+        .btn-cancel:hover { color: white; }
+        
+        .song-number { background: #333; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; flex-shrink: 0; }
+    </style>
+</head>
+<body>
+
+<div class="upload-container">
+    <h2>☁️ Nuevo Lanzamiento</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div style="padding: 15px; margin-bottom: 20px; border-radius: 5px; 
+                 {% if message.tags == 'error' %}background: rgba(233, 20, 41, 0.2); border: 1px solid #e91429; color: #ff6666;
+                 {% else %}background: rgba(29, 185, 84, 0.2); border: 1px solid #1db954; color: #1db954;{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h3>📀 Información del Álbum</h3>
+            
+            <label>Título del Álbum *</label>
+            <input type="text" name="titulo_album" required placeholder="Ej: Mis Grandes Éxitos">
+            
+            <label>Género Principal</label>
+            <select name="genero_global">
+                <option value="">Seleccionar género...</option>
+                {% for g in generos %}
+                <option value="{{ g.genero_id }}">{{ g.nombre }}</option>
+                {% endfor %}
+            </select>
+            
+            <label>Portada del Álbum</label>
+            <input type="file" name="portada_album" accept="image/*">
+            
+            <div class="checkbox-container">
+                <input type="checkbox" id="allow_dl" name="permitir_descarga">
+                <label for="allow_dl">📥 Permitir que otros usuarios descarguen este álbum</label>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>🎵 Lista de Canciones</h3>
+            <div id="songs-container">
+                <div class="song-item">
+                    <div class="song-number">1</div>
+                    <div class="song-inputs">
+                        <input type="text" name="nombre_cancion[]" placeholder="Título de la canción" required>
+                        <input type="file" name="archivo_cancion[]" accept="audio/mp3,audio/wav" required>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" class="btn-add" onclick="addSongField()">
+                ➕ Agregar otra canción
+            </button>
+        </div>
+
+        <button type="submit" class="btn-submit">🚀 Publicar Álbum</button>
+        <a href="{% url 'perfil_usuario' %}" class="btn-cancel">← Cancelar</a>
+    </form>
+</div>
+
+<script>
+function addSongField() {
+    var container = document.getElementById('songs-container');
+    var count = container.querySelectorAll('.song-item').length + 1;
+    
+    var div = document.createElement('div');
+    div.className = 'song-item';
+    div.innerHTML = `
+        <div class="song-number">${count}</div>
+        <div class="song-inputs">
+            <input type="text" name="nombre_cancion[]" placeholder="Título de la canción" required>
+            <input type="file" name="archivo_cancion[]" accept="audio/mp3,audio/wav" required>
+        </div>
+        <button type="button" class="btn-remove" onclick="removeSong(this)">🗑️</button>
+    `;
+    container.appendChild(div);
+}
+
+function removeSong(btn) {
+    var container = document.getElementById('songs-container');
+    if (container.querySelectorAll('.song-item').length > 1) {
+        btn.closest('.song-item').remove();
+        // Renumerar
+        container.querySelectorAll('.song-number').forEach(function(el, i) {
+            el.textContent = i + 1;
+        });
+    } else {
+        alert('Debe haber al menos una canción');
+    }
+}
+</script>
+
+</body>
+</html>

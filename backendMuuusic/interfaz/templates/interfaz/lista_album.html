@@ -1,0 +1,234 @@
+{% extends 'interfaz/base_player.html' %}
+{% load static %}
+
+{% block title %}Álbumes - MuuuSica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 40px 40px 20px;
+    }
+    
+    .page-title {
+        font-size: 32px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .page-title i {
+        color: var(--french-rose);
+    }
+    
+    .albums-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 25px;
+        padding: 0 40px 120px;
+    }
+    
+    .album-card {
+        background: var(--bg-card);
+        border-radius: 8px;
+        padding: 20px;
+        transition: all 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .album-card:hover {
+        background: var(--bg-card-hover);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(243, 72, 125, 0.2);
+    }
+    
+    .album-cover {
+        width: 100%;
+        aspect-ratio: 1;
+        background: #404040;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .album-cover img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .album-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .album-artist {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    .album-meta {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 80px;
+        color: var(--text-secondary);
+    }
+    
+    .empty-state .icon { 
+        font-size: 80px; 
+        display: block; 
+        margin-bottom: 20px;
+        color: var(--french-rose);
+        opacity: 0.5;
+    }
+
+    .album-actions {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s;
+    }
+    
+    .album-card:hover .album-actions {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .action-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    
+    .download-btn {
+        background: rgba(0,0,0,0.7);
+        color: white;
+    }
+    
+    .download-btn:hover { background: #1db954; }
+    .download-btn.downloaded { background: #1db954; }
+    
+    .downloaded-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #1db954;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        display: none;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .downloaded-badge.show { display: flex; }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="header">
+        <h1 class="page-title">
+            <i class="fa-solid fa-compact-disc"></i>
+            Álbumes
+        </h1>
+    </div>
+
+    <div class="albums-grid">
+        {% for album in albumes %}
+        <a href="{% url 'ver_album' album.id %}" class="album-card" data-album-id="{{ album.id }}">
+            <div class="album-cover">
+                <img src="{{ album.portada }}" alt="{{ album.titulo }}">
+                <div class="downloaded-badge" id="badge-{{ album.id }}">
+                    <i class="fa-solid fa-check"></i> Offline
+                </div>
+                <div class="album-actions">
+                    <button class="action-btn download-btn" data-album-id="{{ album.id }}" title="Descargar">
+                        <i class="fa-solid fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="album-title">{{ album.titulo }}</div>
+            <div class="album-artist">{{ album.artista }}</div>
+            <div class="album-meta">{{ album.total_canciones }} canciones</div>
+        </a>
+        {% empty %}
+        <div class="empty-state" style="grid-column: 1/-1;">
+            <span class="icon"><i class="fa-solid fa-compact-disc"></i></span>
+            <p>No hay álbumes disponibles</p>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script>
+(function () {
+    document.querySelectorAll('.download-btn').forEach(function (btn) {
+        btn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const albumId = this.dataset.albumId;
+            const icon = this.querySelector('i');
+            
+            try {
+                const response = await fetch('/api/descargar/album/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ album_id: albumId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const badge = document.getElementById('badge-' + albumId);
+                    if (data.descargado) {
+                        icon.classList.remove('fa-download');
+                        icon.classList.add('fa-check');
+                        this.classList.add('downloaded');
+                        if (badge) badge.classList.add('show');
+                    } else {
+                        icon.classList.remove('fa-check');
+                        icon.classList.add('fa-download');
+                        this.classList.remove('downloaded');
+                        if (badge) badge.classList.remove('show');
+                    }
+                    showToast(data.message);
+                } else {
+                    showToast(data.message || 'Error', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Error de conexión', 'error');
+            }
+        });
+    });
+
+    console.log('Lista de álbumes inicializada');
+})();
+</script>
+{% endblock %}

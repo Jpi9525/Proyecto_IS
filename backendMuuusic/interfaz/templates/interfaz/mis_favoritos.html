@@ -1,0 +1,342 @@
+{% extends 'interfaz/base_player.html' %}
+{% load static %}
+
+{% block title %}Mis Favoritos - MuuuSica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .favorites-header {
+        background: linear-gradient(180deg, rgba(243, 72, 125, 0.4) 0%, var(--bg-deep) 100%);
+        padding: 60px 40px 40px;
+        display: flex;
+        align-items: flex-end;
+        gap: 30px;
+    }
+    
+    .favorites-icon {
+        width: 230px;
+        height: 230px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #4b2d7a, #8b2f5f);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    }
+    
+    .favorites-icon i {
+        font-size: 80px;
+        color: white;
+    }
+    
+    .favorites-info h1 { font-size: 48px; margin-bottom: 15px; }
+    .favorites-meta { color: var(--text-secondary); font-size: 14px; }
+    
+    .actions {
+        padding: 25px 40px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+    
+    .play-all-btn {
+        width: 56px;
+        height: 56px;
+        background: var(--french-rose);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .play-all-btn:hover { transform: scale(1.1); }
+    
+    .shuffle-btn {
+        background: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+        padding: 10px 25px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .shuffle-btn:hover {
+        border-color: white;
+        color: white;
+    }
+    
+    .songs-container { padding: 0 40px 40px; }
+    
+    .songs-header {
+        display: grid;
+        grid-template-columns: 50px 60px 1fr 150px 80px 50px;
+        gap: 15px;
+        padding: 10px 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 10px;
+        color: var(--text-secondary);
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+    
+    .song-row {
+        display: grid;
+        grid-template-columns: 50px 60px 1fr 150px 80px 50px;
+        gap: 15px;
+        align-items: center;
+        padding: 12px 15px;
+        border-radius: 8px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    .song-row:hover { background: var(--bg-card-hover); }
+    .song-row:hover .song-num { display: none; }
+    .song-row:hover .play-icon { display: flex; }
+    .song-row.playing, .song-row.active { background: rgba(243, 72, 125, 0.2); }
+    .song-row.removing {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    
+    .song-num { color: var(--text-secondary); text-align: center; }
+    .play-icon { 
+        display: none; 
+        color: white; 
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .song-cover-small {
+        width: 50px;
+        height: 50px;
+        border-radius: 4px;
+        overflow: hidden;
+        background: #404040;
+    }
+    .song-cover-small img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .song-info h4 { font-size: 16px; font-weight: 400; margin-bottom: 4px; }
+    .song-info p { font-size: 14px; color: var(--text-secondary); }
+    
+    .song-album { color: var(--text-secondary); font-size: 14px; }
+    .song-duration { color: var(--text-secondary); text-align: right; font-size: 14px; }
+    
+    .remove-btn {
+        background: none;
+        border: none;
+        color: var(--french-rose);
+        font-size: 18px;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: all 0.3s;
+    }
+    .remove-btn:hover {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 80px;
+        color: var(--text-secondary);
+    }
+    .empty-state .icon { 
+        font-size: 80px; 
+        display: block; 
+        margin-bottom: 20px;
+        color: var(--french-rose);
+        opacity: 0.5;
+    }
+    .empty-state a {
+        color: var(--french-rose);
+        text-decoration: none;
+        margin-top: 15px;
+        display: inline-block;
+    }
+    .empty-state a:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+        .favorites-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 40px 20px 30px;
+        }
+        .favorites-icon { width: 180px; height: 180px; }
+        .favorites-icon i { font-size: 60px; }
+        .favorites-info h1 { font-size: 28px; }
+        .songs-header { display: none; }
+        .song-row {
+            grid-template-columns: 50px 50px 1fr 50px;
+        }
+        .song-album, .song-duration { display: none; }
+        .actions { padding: 20px; justify-content: center; }
+        .songs-container { padding: 0 20px 40px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="favorites-header">
+        <div class="favorites-icon">
+            <i class="fa-solid fa-heart"></i>
+        </div>
+        <div class="favorites-info">
+            <h1>Tus Favoritos</h1>
+            <p class="favorites-meta">
+                <span id="totalCanciones">{{ total_canciones }}</span> canciones que te encantan
+            </p>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="play-all-btn" id="playAllBtn" title="Reproducir todo">
+            <i class="fa-solid fa-play"></i>
+        </button>
+        <button class="shuffle-btn" id="shuffleBtnHeader">
+            <i class="fa-solid fa-shuffle"></i> Aleatorio
+        </button>
+    </div>
+
+    <div class="songs-container">
+        {% if canciones %}
+        <div class="songs-header">
+            <span>#</span>
+            <span></span>
+            <span>Título</span>
+            <span>Álbum</span>
+            <span><i class="fa-regular fa-clock"></i></span>
+            <span></span>
+        </div>
+        {% endif %}
+
+        <div id="songsList">
+            {% for cancion in canciones %}
+            <div class="song-row" 
+                 data-id="{{ cancion.id }}" 
+                 data-ruta="{{ cancion.ruta_archivo }}" 
+                 data-titulo="{{ cancion.titulo }}" 
+                 data-artista="{{ cancion.artista }}" 
+                 data-portada="{{ cancion.portada }}">
+                <div>
+                    <span class="song-num">{{ forloop.counter }}</span>
+                    <span class="play-icon"><i class="fa-solid fa-play"></i></span>
+                </div>
+                <div class="song-cover-small">
+                    <img src="{{ cancion.portada }}" alt="{{ cancion.titulo }}">
+                </div>
+                <div class="song-info">
+                    <h4>{{ cancion.titulo }}</h4>
+                    <p>{{ cancion.artista }}</p>
+                </div>
+                <div class="song-album">{{ cancion.album }}</div>
+                <div class="song-duration">{{ cancion.duracion }}</div>
+                <button class="remove-btn" title="Quitar de favoritos">
+                    <i class="fa-solid fa-heart"></i>
+                </button>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <span class="icon"><i class="fa-regular fa-heart-crack"></i></span>
+                <p>No tienes canciones favoritas todavía</p>
+                <a href="{% url 'lista_reproduccion' %}">Explorar música</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script data-page-script>
+(function() {
+
+    function inicializarFavoritos() {
+        var playBtn = document.getElementById('playAllBtn');
+        if (playBtn) {
+            playBtn.onclick = function() {
+                var firstRow = document.querySelector('.song-row');
+                if (firstRow && typeof reproducirCancion === 'function') {
+                    reproducirCancion(firstRow.dataset.id);
+                }
+            };
+        }
+
+        var shuffleBtn = document.getElementById('shuffleBtnHeader');
+        if (shuffleBtn) {
+            shuffleBtn.onclick = function() {
+                var rows = document.querySelectorAll('.song-row');
+                if (rows.length > 0 && typeof reproducirCancion === 'function') {
+                    var randomIndex = Math.floor(Math.random() * rows.length);
+                    reproducirCancion(rows[randomIndex].dataset.id);
+                    showToast('Reproduciendo aleatoriamente');
+                }
+            };
+        }
+
+        document.querySelectorAll('.remove-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var row = this.closest('.song-row');
+                if (row) quitarDeFavoritos(row);
+            });
+        });
+
+        console.log('Favoritos inicializado');
+    }
+
+    async function quitarDeFavoritos(row) {
+        var songId = row.dataset.id;
+        var songTitle = row.dataset.titulo;
+        
+        try {
+            var response = await fetch('/api/favorito/toggle/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cancion_id: songId })
+            });
+            var data = await response.json();
+            
+            if (data.success) {
+                row.classList.add('removing');
+                setTimeout(function() {
+                    row.remove();
+                    actualizarNumerosFavoritos();
+                    if (document.querySelectorAll('.song-row').length === 0) {
+                        document.getElementById('songsList').innerHTML =
+                            '<div class="empty-state"><span class="icon"><i class="fa-regular fa-heart-crack"></i></span><p>No tienes canciones favoritas</p></div>';
+                    }
+                }, 300);
+                showToast('"' + songTitle + '" quitado de favoritos');
+            }
+        } catch (e) {
+            showToast('Error', 'error');
+            console.error(e);
+        }
+    }
+
+    function actualizarNumerosFavoritos() {
+        document.querySelectorAll('.song-row').forEach(function(row, i) {
+            var num = row.querySelector('.song-num');
+            if (num) num.textContent = i + 1;
+        });
+        var total = document.getElementById('totalCanciones');
+        if (total) total.textContent = document.querySelectorAll('.song-row').length;
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inicializarFavoritos);
+    } else {
+        inicializarFavoritos();
+    }
+
+})();
+</script>
+{% endblock %}

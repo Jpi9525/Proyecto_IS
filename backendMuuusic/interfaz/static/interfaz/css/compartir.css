@@ -1,0 +1,269 @@
+/* =========================================
+   COMPARTIR ✨
+   ========================================= */
+
+/* Animación de fondo suave */
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes floatCard {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0); }
+}
+
+/* Contenedor Principal */
+.share-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+    
+    /* 1. EL FIX PARA QUE NO SE CORTE CON EL PLAYER 👇 */
+    padding-bottom: 140px; 
+    padding-top: 80px; /* Espacio para el header */
+    padding-left: 20px;
+    padding-right: 20px;
+
+    /* Fondo Animado Aesthetic */
+    background: linear-gradient(-45deg, #050505, #1a050d, #260a14, #000000);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+/* Botón Volver Flotante */
+.header-share {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    z-index: 10;
+}
+
+.back-btn {
+    display: flex; align-items: center; gap: 10px;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    font-size: 14px; font-weight: 600;
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    transform: translateX(-5px);
+    border-color: var(--french-rose);
+}
+
+/* Tarjeta Glassmorphism */
+.share-card {
+    position: relative;
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(20px); /* Efecto vidrio */
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 50px 40px;
+    text-align: center;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    animation: floatCard 6s ease-in-out infinite;
+}
+
+/* Borde superior neón */
+.share-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--french-rose), transparent);
+    opacity: 0.8;
+}
+
+/* Portada con Resplandor */
+.cover-wrapper {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    margin: 0 auto 30px auto;
+}
+
+.share-cover {
+    width: 100%; height: 100%;
+    border-radius: 16px;
+    object-fit: cover;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Glow detrás de la imagen */
+.cover-glow {
+    position: absolute;
+    top: 20px; left: 0; right: 0; bottom: -10px;
+    background: inherit;
+    filter: blur(30px);
+    opacity: 0.6;
+    z-index: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--french-rose) 0%, transparent 70%);
+}
+
+/* Textos */
+.share-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 5px;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    line-height: 1.2;
+}
+
+.share-artist {
+    color: var(--kobi);
+    font-size: 1.1rem;
+    margin: 0 0 20px;
+    font-weight: 500;
+}
+
+.share-duration {
+    display: inline-block;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #ccc;
+    margin-bottom: 30px;
+}
+
+/* Botón Play Grande */
+.share-play-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--french-rose), var(--cranberry));
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 10px 25px rgba(243, 72, 125, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.share-play-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(243, 72, 125, 0.5);
+}
+
+.share-play-btn:active { transform: scale(0.98); }
+
+/* Acciones Sociales */
+.share-actions {
+    display: flex; justify-content: center; gap: 15px;
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.share-action-btn {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.03);
+    color: #bbb;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.share-action-btn:hover {
+    background: white;
+    color: black;
+    transform: translateY(-5px);
+}
+
+/* Colores específicos hover */
+.share-action-btn.whatsapp:hover { background: #25D366; color: white; border-color: #25D366; }
+.share-action-btn.twitter:hover { background: #1DA1F2; color: white; border-color: #1DA1F2; }
+.share-action-btn.facebook:hover { background: #4267B2; color: white; border-color: #4267B2; }
+
+/* Input Copiar */
+.share-url-container {
+    display: flex;
+    margin-top: 20px;
+    background: #111;
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.share-url-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 12px;
+    padding: 0 10px;
+    font-family: monospace;
+}
+
+.share-copy-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.share-copy-btn:hover { background: var(--french-rose); }
+
+/* QR Section */
+.qr-section { margin-top: 20px; }
+.qr-toggle {
+    background: none; border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+    opacity: 0.7;
+    transition: 0.2s;
+}
+.qr-toggle:hover { opacity: 1; color: var(--french-rose); }
+
+.qr-container {
+    display: none;
+    margin-top: 15px;
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    animation: fadeIn 0.3s ease;
+}
+.qr-container.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Responsivo */
+@media (max-width: 480px) {
+    .share-card { padding: 30px 20px; }
+    .cover-wrapper { width: 180px; height: 180px; }
+    .share-title { font-size: 1.5rem; }
+}
